@@ -15,6 +15,15 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script>
     (function() {
+      {% if current_user.is_authenticated %}
+      const serverTheme = {{ current_user.theme|tojson }};
+      localStorage.setItem('theme', serverTheme);
+      if (serverTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      } else {
+        document.documentElement.classList.remove('dark-mode');
+      }
+      {% else %}
       const savedTheme = localStorage.getItem('theme');
       const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
@@ -22,6 +31,7 @@
       } else {
         document.documentElement.classList.remove('dark-mode');
       }
+      {% endif %}
     })();
   </script>
 </head>
@@ -207,17 +217,28 @@ function applySwUpdate() {
 }
 
 function toggleDarkMode(isDark) {
+  const theme = isDark ? 'dark' : 'light';
   if (isDark) {
     document.documentElement.classList.add('dark-mode');
-    localStorage.setItem('theme', 'dark');
   } else {
     document.documentElement.classList.remove('dark-mode');
-    localStorage.setItem('theme', 'light');
   }
+  localStorage.setItem('theme', theme);
   const deskSwitch = document.getElementById('theme-switch-desktop');
   const mobSwitch = document.getElementById('theme-switch-mobile');
   if (deskSwitch) deskSwitch.checked = isDark;
   if (mobSwitch) mobSwitch.checked = isDark;
+
+  {% if current_user.is_authenticated %}
+  fetch('{{ url_for("update_theme") }}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ theme: theme }),
+  }).catch(() => {
+    // Falha de rede: o tema continua aplicado localmente nesta sessão;
+    // a próxima vez que o usuário trocar o tema, tenta salvar de novo.
+  });
+  {% endif %}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
