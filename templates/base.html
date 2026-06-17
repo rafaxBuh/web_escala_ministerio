@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <script>(function(){var t=localStorage.getItem('zelo-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}());</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}ZELO{% endblock %}</title>
@@ -49,6 +50,9 @@
       <a href="{{ url_for('logout') }}" class="btn btn-sm btn-ghost">Sair</a>
     </div>
 
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Alternar tema" title="Alternar tema claro/escuro">
+      <span id="theme-icon">☾</span>
+    </button>
     <button class="nav-hamburger" id="nav-hamburger"
             onclick="toggleMenu()"
             aria-label="Menu">
@@ -181,6 +185,24 @@ function applySwUpdate() {
   if (banner) banner.querySelector('button').textContent = 'Atualizando…';
   if (window._pendingSW) window._pendingSW.postMessage('SKIP_WAITING');
 }
+
+// ── Dark mode ─────────────────────────────────────────────────────────────────
+function _applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('zelo-theme', theme);
+  var icon = document.getElementById('theme-icon');
+  if (icon) icon.textContent = theme === 'dark' ? '☀' : '☾';
+}
+function toggleTheme() {
+  var current = document.documentElement.getAttribute('data-theme');
+  _applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+// Sync icon on load
+(function() {
+  var t = localStorage.getItem('zelo-theme') || 'light';
+  var icon = document.getElementById('theme-icon');
+  if (icon) icon.textContent = t === 'dark' ? '☀' : '☾';
+}());
 
 function toggleMenu() {
   var btn     = document.getElementById('nav-hamburger');

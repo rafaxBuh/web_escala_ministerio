@@ -785,11 +785,15 @@ html, body {
   .stats-grid     { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* ── Tabelas sem scroll horizontal no mobile ─────────────────────────────────── */
+/* ── Tabelas no mobile ───────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   /* Células compactas */
   td, th { font-size: .75rem; padding: .4rem .5rem; word-break: break-word; }
   .td-actions { flex-wrap: wrap; gap: .25rem; }
+  /* Permite scroll horizontal em tabelas se necessário */
+  .table-wrap { overflow-x: auto; }
+  /* Força células nowrap a quebrar no mobile */
+  td[style*="white-space:nowrap"] { white-space: normal !important; }
 
   /* Usuários: esconde E-mail (col 2) e Ministério (col 4) */
   .t-users th:nth-child(2), .t-users td:nth-child(2),
@@ -802,4 +806,102 @@ html, body {
   /* Escalas: esconde "Período" (col 2) */
   .t-schedules th:nth-child(2),
   .t-schedules td:nth-child(2) { display: none; }
+
+  /* Colapsa todos os grids inline com 2+ colunas */
+  [style*="grid-template-columns:1fr 1fr"],
+  [style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Remove min-width que causa overflow */
+  [style*="min-width:200px"] { min-width: 0 !important; }
+
+  /* Esconde label de usuário na navbar (economiza espaço) */
+  .user-name { display: none; }
+}
+
+/* ── Dark mode ───────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --primary:         #20E1C9;
+  --primary-dark:    #17c4ae;
+  --primary-light:   rgba(32,225,201,.13);
+  --secondary:       #a78bfa;
+  --secondary-light: rgba(167,139,250,.15);
+
+  --success:       #34d399;
+  --success-light: rgba(52,211,153,.13);
+  --warning:       #fbbf24;
+  --warning-light: rgba(251,191,36,.13);
+  --danger:        #f87171;
+  --danger-light:  rgba(248,113,113,.13);
+  --info:          #60a5fa;
+  --info-light:    rgba(96,165,250,.13);
+
+  --text:       #e2e2e7;
+  --text-muted: #8a8a97;
+  --border:     #2d2d35;
+  --bg:         #111115;
+  --white:      #1a1a22;
+
+  --shadow:    0 2px 8px rgba(0,0,0,.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.5);
+}
+
+/* Componentes com cores hardcoded que precisam de override */
+[data-theme="dark"] .badge-admin     { background: rgba(167,139,250,.2); color: #c4b5fd; }
+[data-theme="dark"] .badge-recruta   { background: rgba(251,146,60,.12); color: #fb923c; border-color: rgba(251,146,60,.25); }
+[data-theme="dark"] .badge-volunteer { background: var(--bg); color: var(--text-muted); border-color: var(--border); }
+
+[data-theme="dark"] .alert-success { color: #34d399; border-color: rgba(52,211,153,.3); }
+[data-theme="dark"] .alert-error   { color: #f87171; border-color: rgba(248,113,113,.3); }
+[data-theme="dark"] .alert-warning { color: #fbbf24; border-color: rgba(251,191,36,.3); }
+[data-theme="dark"] .alert-info    { color: #60a5fa; border-color: rgba(96,165,250,.3); }
+
+[data-theme="dark"] tr:hover td { background: #222229; }
+[data-theme="dark"] th { background: #15151b; }
+
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="password"],
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="time"],
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: #111115;
+  color: var(--text);
+  border-color: var(--border);
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .btn-primary { color: #0d0d0f; }
+[data-theme="dark"] .btn-success { color: #0d0d0f; }
+[data-theme="dark"] .btn-ghost   { color: var(--text-muted); border-color: var(--border); }
+[data-theme="dark"] .btn-ghost:hover { background: var(--bg); }
+
+[data-theme="dark"] .login-card  { background: var(--white); }
+[data-theme="dark"] .nav-mobile  { background: var(--white); }
+
+/* ── Botão de alternância de tema ────────────────────────────────────────────── */
+.theme-toggle {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: color .15s, border-color .15s, background .15s;
+  line-height: 1;
+}
+.theme-toggle:hover { color: var(--text); border-color: var(--text-muted); background: var(--bg); }
+
+@media (max-width: 640px) {
+  .theme-toggle { order: 98; margin-left: auto; }
+  .nav-hamburger { margin-left: .375rem; }
 }
