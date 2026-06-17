@@ -56,12 +56,19 @@
  <div style="display:flex;flex-direction:column;">
  {% for wk in week_dates %}
  {% set cur = sched_map.get(wk.week, {}) %}
- <div style="padding:.875rem 1.25rem;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
+ {% set m1 = (volunteers | selectattr('id', 'equalto', cur.get('member1_id')) | list | first) if cur.get('member1_id') else none %}
+ {% set m2 = (volunteers | selectattr('id', 'equalto', cur.get('member2_id')) | list | first) if cur.get('member2_id') else none %}
+ {% set m3 = (volunteers | selectattr('id', 'equalto', cur.get('member3_id')) | list | first) if cur.get('member3_id') else none %}
+ <div style="padding:.875rem 1.25rem;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}" data-week-block>
 
   {# Week label #}
-  <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:.625rem;">
+  <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:.625rem;" data-week-label>
    Semana {{ wk.week }} — {{ wk.label }}
   </div>
+
+  {% if m1 %}<span style="display:none;" data-week-member="{{ m1['name']|e }}"></span>{% endif %}
+  {% if m2 %}<span style="display:none;" data-week-member="{{ m2['name']|e }}"></span>{% endif %}
+  {% if m3 %}<span style="display:none;" data-week-member="{{ m3['name']|e }}" data-week-badge="Recruta"></span>{% endif %}
 
   {# Dropdowns em coluna #}
   <div style="display:flex;flex-direction:column;gap:.5rem;">
@@ -172,5 +179,5 @@
 
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="{{ url_for('static', filename='export-schedule-image.js') }}?v=1"></script>
+<script src="{{ url_for('static', filename='export-schedule-image.js') }}?v=2"></script>
 {% endblock %}
