@@ -1512,15 +1512,18 @@ def event_schedule_add(event_id):
     if current_user.role == 'ministry_leader' and event.get('ministry_id') != mid:
         abort(403)
 
-    slot_date = request.form.get("slot_date", "").strip()
-    period    = request.form.get("period", "").strip()
-    member_id = request.form.get("member_id", type=int)
+    slot_date  = request.form.get("slot_date", "").strip()
+    period     = request.form.get("period", "").strip()
+    member_id  = request.form.get("member_id", type=int)
+    member_id2 = request.form.get("member_id2", type=int)
 
     if not slot_date or period not in _PERIOD_LABELS or not member_id:
         flash("Dados inválidos.", "error")
         return redirect(url_for("event_schedule_view", event_id=event_id))
 
     models.add_event_schedule_member(event_id, slot_date, period, member_id)
+    if member_id2 and member_id2 != member_id:
+        models.add_event_schedule_member(event_id, slot_date, period, member_id2)
     return redirect(url_for("event_schedule_view", event_id=event_id))
 
 

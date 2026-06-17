@@ -22,7 +22,7 @@
   </div>
   <div class="card-body">
     <form method="POST" action="{{ url_for('leader_create_event') }}">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.75rem;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem;">
         <div class="form-group">
           <label>Título <span style="color:var(--danger);">*</span></label>
           <input type="text" name="title" placeholder="ex.: Ensaio especial" required autofocus>
