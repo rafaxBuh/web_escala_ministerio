@@ -695,6 +695,38 @@ def get_join_request(request_id):
         ).fetchone()
 
 
+# ── Event Schedule ─────────────────────────────────────────────────────────────
+
+def get_event_schedule(event_id):
+    with db_conn() as conn:
+        return conn.execute("""
+            SELECT esm.id, esm.slot_date, esm.period, esm.member_id, u.name AS member_name
+            FROM event_schedule_members esm
+            JOIN users u ON u.id = esm.member_id
+            WHERE esm.event_id = %s
+            ORDER BY esm.slot_date, esm.period, u.name
+        """, (event_id,)).fetchall()
+
+
+def add_event_schedule_member(event_id, slot_date, period, member_id):
+    with db_conn() as conn:
+        conn.execute(
+            "INSERT INTO event_schedule_members (event_id, slot_date, period, member_id)"
+            " VALUES (%s,%s,%s,%s) ON CONFLICT DO NOTHING",
+            (event_id, slot_date, period, member_id),
+        )
+        conn.commit()
+
+
+def remove_event_schedule_member(entry_id, event_id):
+    with db_conn() as conn:
+        conn.execute(
+            "DELETE FROM event_schedule_members WHERE id=%s AND event_id=%s",
+            (entry_id, event_id),
+        )
+        conn.commit()
+
+
 # ── Pending Registrations ──────────────────────────────────────────────────────
 
 def create_pending_registration(name, email, ministry_id):

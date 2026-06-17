@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Escala — {{ event['title'] }}{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+  <a href="{{ url_for('leader_dashboard') }}">Painel</a>
+  <span class="breadcrumb-sep">›</span>
+  <a href="{{ url_for('leader_events') }}">Eventos</a>
+  <span class="breadcrumb-sep">›</span>
+  <span>Escala do Evento</span>
+</div>
+
+<div class="page-header">
+  <h1 class="page-title">{{ event['title'] }}</h1>
+  <p class="page-subtitle">
+    {% set s = event['event_date'] %}
+    {{ s[8:10] }}/{{ s[5:7] }}/{{ s[:4] }}
+    {% if event.get('end_date') %}
+      {% set e = event['end_date'] %}
+      — {{ e[8:10] }}/{{ e[5:7] }}/{{ e[:4] }}
+    {% endif %}
+    {% if event['event_time'] %} · {{ event['event_time'][:5] }}{% endif %}
+  </p>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem;border-left:3px solid var(--primary);">
+  <div class="card-body" style="font-size:.875rem;color:var(--text-muted);line-height:1.5;">
+    Defina livremente quem serve em cada turno. Clique em <strong>+ Adicionar</strong> para
+    incluir um membro e no <strong>×</strong> para remover.
+  </div>
+</div>
+
+{% for day in days %}
+<div style="margin-bottom:1.5rem;">
+
+  {# Cabeçalho do dia #}
+  <div style="font-size:.8125rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+              color:var(--text-muted);margin-bottom:.625rem;padding-bottom:.375rem;
+              border-bottom:2px solid var(--border);">
+    {{ day['label'] }}
+  </div>
+
+  <div class="event-sched-grid">
+    {% for period in periods %}
+    {% set slot_members = schedule_map.get((day['iso'], period), []) %}
+
+    <div class="card" style="overflow:visible;">
+      <div class="card-header" style="padding:.625rem .875rem;">
+        <span class="card-title" style="font-size:.875rem;">{{ period_labels[period] }}</span>
+        <span class="badge badge-volunteer">{{ slot_members|length }}</span>
+      </div>
+      <div class="card-body" style="padding:.75rem .875rem;">
+
+        {# Membros escalados #}
+        {% if slot_members %}
+        <div style="display:flex;flex-direction:column;gap:.375rem;margin-bottom:.75rem;">
+          {% for m in slot_members %}
+          <div style="display:flex;align-items:center;gap:.5rem;background:var(--primary-light);
+                      border-radius:var(--radius);padding:.3rem .6rem;border-left:3px solid var(--primary);">
+            <span style="flex:1;font-weight:600;font-size:.875rem;min-width:0;
+                         overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m['member_name'] }}</span>
+            <form method="POST"
+                  action="{{ url_for('event_schedule_remove', event_id=event['id'], entry_id=m['id']) }}">
+              <button type="submit" style="background:none;border:none;cursor:pointer;
+                      color:var(--text-muted);font-size:1rem;line-height:1;padding:0 .1rem;"
+                      title="Remover">×</button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {# Formulário de adição #}
+        {% set assigned_ids = slot_members | map(attribute='member_id') | list %}
+        {% set eligible = members | rejectattr('id', 'in', assigned_ids) | list %}
+        {% if eligible %}
+        <form method="POST" action="{{ url_for('event_schedule_add', event_id=event['id']) }}"
+              style="display:flex;gap:.375rem;align-items:center;">
+          <input type="hidden" name="slot_date" value="{{ day['iso'] }}">
+          <input type="hidden" name="period"    value="{{ period }}">
+          <select name="member_id" required style="flex:1;font-size:.8125rem;padding:.3rem .5rem;">
+            <option value="">+ Adicionar</option>
+            {% for m in eligible %}
+            <option value="{{ m['id'] }}">{{ m['name'] }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-primary btn-sm" style="padding:.3rem .6rem;">✓</button>
+        </form>
+        {% else %}
+        <p style="font-size:.8125rem;color:var(--text-muted);margin:0;">Todos adicionados.</p>
+        {% endif %}
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endfor %}
+
+<div style="margin-top:1rem;">
+  <a href="{{ url_for('leader_events') }}" class="btn btn-ghost">← Voltar aos Eventos</a>
+</div>
+
+{% endblock %}

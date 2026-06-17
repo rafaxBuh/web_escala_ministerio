@@ -186,6 +186,17 @@ def init_db():
         conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS for_leaders BOOLEAN NOT NULL DEFAULT FALSE")
         conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS notify_all BOOLEAN NOT NULL DEFAULT FALSE")
         conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS end_date TEXT")
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS event_schedule_members (
+                id SERIAL PRIMARY KEY,
+                event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+                slot_date TEXT NOT NULL,
+                period TEXT NOT NULL CHECK(period IN ('manha', 'tarde', 'noite')),
+                member_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                UNIQUE(event_id, slot_date, period, member_id)
+            )
+        """)
         conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS event_time TEXT")
 
         conn.execute("""

@@ -1391,6 +1391,87 @@ def leader_delete_event(event_id):
     return redirect(url_for("leader_events"))
 
 
+_PERIOD_LABELS = {'manha': 'Manhã', 'tarde': 'Tarde', 'noite': 'Noite'}
+_WEEKDAYS_PT   = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+
+
+@app.route("/lider/eventos/<int:event_id>/escala")
+@leader_required
+def event_schedule_view(event_id):
+    event = models.get_event(event_id)
+    if not event:
+        abort(404)
+    mid = current_user.ministry_id
+    if not mid:
+        abort(403)
+    if current_user.role == 'ministry_leader' and event.get('ministry_id') != mid:
+        abort(403)
+
+    start = date.fromisoformat(event['event_date'])
+    end   = date.fromisoformat(event['end_date']) if event.get('end_date') else start
+    days  = []
+    d = start
+    while d <= end:
+        days.append({'iso': d.isoformat(), 'label': f"{_WEEKDAYS_PT[d.weekday()]} {d.day:02d}/{d.month:02d}"})
+        d += timedelta(days=1)
+
+    entries = models.get_event_schedule(event_id)
+    schedule_map = {}
+    for entry in entries:
+        key = (entry['slot_date'], entry['period'])
+        schedule_map.setdefault(key, []).append(entry)
+
+    members = models.list_volunteers_by_ministry(mid)
+    return render_template(
+        "leader/event_schedule.html",
+        event=event,
+        days=days,
+        periods=list(_PERIOD_LABELS.keys()),
+        period_labels=_PERIOD_LABELS,
+        schedule_map=schedule_map,
+        members=members,
+    )
+
+
+@app.route("/lider/eventos/<int:event_id>/escala/adicionar", methods=["POST"])
+@leader_required
+def event_schedule_add(event_id):
+    event = models.get_event(event_id)
+    if not event:
+        abort(404)
+    mid = current_user.ministry_id
+    if not mid:
+        abort(403)
+    if current_user.role == 'ministry_leader' and event.get('ministry_id') != mid:
+        abort(403)
+
+    slot_date = request.form.get("slot_date", "").strip()
+    period    = request.form.get("period", "").strip()
+    member_id = request.form.get("member_id", type=int)
+
+    if not slot_date or period not in _PERIOD_LABELS or not member_id:
+        flash("Dados inválidos.", "error")
+        return redirect(url_for("event_schedule_view", event_id=event_id))
+
+    models.add_event_schedule_member(event_id, slot_date, period, member_id)
+    return redirect(url_for("event_schedule_view", event_id=event_id))
+
+
+@app.route("/lider/eventos/<int:event_id>/escala/<int:entry_id>/remover", methods=["POST"])
+@leader_required
+def event_schedule_remove(event_id, entry_id):
+    event = models.get_event(event_id)
+    if not event:
+        abort(404)
+    mid = current_user.ministry_id
+    if not mid:
+        abort(403)
+    if current_user.role == 'ministry_leader' and event.get('ministry_id') != mid:
+        abort(403)
+    models.remove_event_schedule_member(entry_id, event_id)
+    return redirect(url_for("event_schedule_view", event_id=event_id))
+
+
 @app.route("/admin/eventos/<int:event_id>/excluir", methods=["POST"])
 @admin_required
 def admin_delete_event(event_id):

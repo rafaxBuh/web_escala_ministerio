@@ -50,9 +50,11 @@
       <a href="{{ url_for('logout') }}" class="btn btn-sm btn-ghost">Sair</a>
     </div>
 
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Alternar tema" title="Alternar tema claro/escuro">
-      <span id="theme-icon">☾</span>
-    </button>
+    <label class="toggle-switch" title="Tema escuro">
+      <input type="checkbox" id="theme-checkbox" onchange="toggleTheme(this.checked)" aria-label="Tema escuro">
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      <span class="toggle-label-txt" style="display:none;">Escuro</span>
+    </label>
     <button class="nav-hamburger" id="nav-hamburger"
             onclick="toggleMenu()"
             aria-label="Menu">
@@ -88,7 +90,14 @@
           {%- if current_user.role == 'general_leader' %}Admin{% elif current_user.role == 'ministry_leader' %}Líder{% elif current_user.role == 'recruta' %}Recruta{% else %}Voluntário{% endif -%}
         </span>
       </div>
-      <a href="{{ url_for('logout') }}" class="btn btn-sm btn-ghost">Sair</a>
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <label class="toggle-switch" title="Tema escuro">
+          <input type="checkbox" id="theme-checkbox-mobile" onchange="toggleTheme(this.checked)" aria-label="Tema escuro">
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span style="font-size:.8rem;color:var(--text-muted);">Escuro</span>
+        </label>
+        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-ghost">Sair</a>
+      </div>
     </div>
   </div>
   {% endif %}
@@ -187,21 +196,22 @@ function applySwUpdate() {
 }
 
 // ── Dark mode ─────────────────────────────────────────────────────────────────
-function _applyTheme(theme) {
+function _syncToggleCheckboxes(isDark) {
+  ['theme-checkbox','theme-checkbox-mobile'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.checked = isDark;
+  });
+}
+function toggleTheme(isDark) {
+  var theme = isDark ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem('zelo-theme', theme);
-  var icon = document.getElementById('theme-icon');
-  if (icon) icon.textContent = theme === 'dark' ? '☀' : '☾';
+  _syncToggleCheckboxes(isDark);
 }
-function toggleTheme() {
-  var current = document.documentElement.getAttribute('data-theme');
-  _applyTheme(current === 'dark' ? 'light' : 'dark');
-}
-// Sync icon on load
+// Sync checkboxes on load
 (function() {
-  var t = localStorage.getItem('zelo-theme') || 'light';
-  var icon = document.getElementById('theme-icon');
-  if (icon) icon.textContent = t === 'dark' ? '☀' : '☾';
+  var isDark = (localStorage.getItem('zelo-theme') || 'light') === 'dark';
+  _syncToggleCheckboxes(isDark);
 }());
 
 function toggleMenu() {

@@ -85,13 +85,17 @@
             {% endif %}
           </td>
           <td>
-            {% if ev['ministry_id'] == current_user.ministry_id and not ev['for_leaders'] %}
-            <form method="POST"
-                  action="{{ url_for('leader_delete_event', event_id=ev['id']) }}"
-                  onsubmit="return confirm('Excluir este evento?')">
-              <button class="btn btn-danger-outline btn-sm" type="submit">Excluir</button>
-            </form>
-            {% endif %}
+            <div style="display:flex;gap:.375rem;flex-wrap:wrap;">
+              {% if ev['ministry_id'] == current_user.ministry_id and not ev['for_leaders'] %}
+              <a href="{{ url_for('event_schedule_view', event_id=ev['id']) }}"
+                 class="btn btn-ghost btn-sm">Escala</a>
+              <form method="POST"
+                    action="{{ url_for('leader_delete_event', event_id=ev['id']) }}"
+                    onsubmit="return confirm('Excluir este evento?')">
+                <button class="btn btn-danger-outline btn-sm" type="submit">Excluir</button>
+              </form>
+              {% endif %}
+            </div>
           </td>
         </tr>
         {% endfor %}

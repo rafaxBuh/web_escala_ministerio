@@ -882,6 +882,53 @@ html, body {
 [data-theme="dark"] .login-card  { background: var(--white); }
 [data-theme="dark"] .nav-mobile  { background: var(--white); }
 
+/* ── Toggle switch de tema ───────────────────────────────────────────────────── */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: .8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.toggle-switch input { display: none; }
+.toggle-track {
+  width: 38px;
+  height: 22px;
+  background: var(--border);
+  border-radius: 9999px;
+  position: relative;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: var(--white);
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,.25);
+  transition: transform .2s;
+}
+.toggle-switch input:checked ~ .toggle-track { background: var(--primary); }
+.toggle-switch input:checked ~ .toggle-track .toggle-thumb { transform: translateX(16px); }
+
+/* ── Escala de evento especial ───────────────────────────────────────────────── */
+.event-sched-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .75rem;
+  margin-bottom: 1.25rem;
+}
+@media (max-width: 500px) {
+  .event-sched-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Botão de alternância de tema ────────────────────────────────────────────── */
 .theme-toggle {
   background: none;
