@@ -11,18 +11,27 @@
   <span>Escala do Evento</span>
 </div>
 
-<div class="page-header">
-  <h1 class="page-title">{{ event['title'] }}</h1>
-  <p class="page-subtitle">
-    {% set s = event['event_date'] %}
-    {{ s[8:10] }}/{{ s[5:7] }}/{{ s[:4] }}
-    {% if event.get('end_date') %}
-      {% set e = event['end_date'] %}
-      — {{ e[8:10] }}/{{ e[5:7] }}/{{ e[:4] }}
-    {% endif %}
-    {% if event['event_time'] %} · {{ event['event_time'][:5] }}{% endif %}
-  </p>
+<div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+  <div>
+    <h1 class="page-title">{{ event['title'] }}</h1>
+    <p class="page-subtitle">
+      {% set s = event['event_date'] %}
+      {{ s[8:10] }}/{{ s[5:7] }}/{{ s[:4] }}
+      {% if event.get('end_date') %}
+        {% set e = event['end_date'] %}
+        — {{ e[8:10] }}/{{ e[5:7] }}/{{ e[:4] }}
+      {% endif %}
+      {% if event['event_time'] %} · {{ event['event_time'][:5] }}{% endif %}
+    </p>
+  </div>
+  <button type="button" class="btn btn-ghost btn-sm" id="btn-export-event-image"
+    onclick="exportEventScheduleImage('{{ event['title']|e }}', document.getElementById('event-subtitle-text').textContent.trim())">
+    Exportar Imagem
+  </button>
 </div>
+<span id="event-subtitle-text" style="display:none;">
+  {% set s = event['event_date'] %}{{ s[8:10] }}/{{ s[5:7] }}/{{ s[:4] }}{% if event.get('end_date') %}{% set e = event['end_date'] %} — {{ e[8:10] }}/{{ e[5:7] }}/{{ e[:4] }}{% endif %}{% if event['event_time'] %} · {{ event['event_time'][:5] }}{% endif %}
+</span>
 
 <div class="card" style="margin-bottom:1.25rem;border-left:3px solid var(--primary);">
   <div class="card-body" style="font-size:.875rem;color:var(--text-muted);line-height:1.5;">
@@ -32,12 +41,12 @@
 </div>
 
 {% for day in days %}
-<div style="margin-bottom:1.5rem;">
+<div style="margin-bottom:1.5rem;" data-day-block>
 
   {# Cabeçalho do dia #}
   <div style="font-size:.8125rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
               color:var(--text-muted);margin-bottom:.625rem;padding-bottom:.375rem;
-              border-bottom:2px solid var(--border);">
+              border-bottom:2px solid var(--border);" data-day-label>
     {{ day['label'] }}
   </div>
 
@@ -47,7 +56,7 @@
     {% set assigned_ids = [] %}
     {% for m in slot_members %}{% if assigned_ids.append(m['member_id']) %}{% endif %}{% endfor %}
 
-    <div class="card" style="overflow:visible;">
+    <div class="card" style="overflow:visible;" data-period-block data-period-label="{{ period_labels[period]|e }}">
       <div class="card-header" style="padding:.625rem .875rem;">
         <span class="card-title" style="font-size:.875rem;">{{ period_labels[period] }}</span>
         <span class="badge badge-volunteer">{{ slot_members|length }}</span>
@@ -60,7 +69,7 @@
           {% for m in slot_members %}
           <div style="display:flex;align-items:center;gap:.5rem;background:var(--primary-light);
                       border-radius:var(--radius);padding:.3rem .6rem;border-left:3px solid var(--primary);">
-            <span style="flex:1;font-weight:600;font-size:.875rem;min-width:0;
+            <span data-slot-member style="flex:1;font-weight:600;font-size:.875rem;min-width:0;
                          overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m['member_name'] }}</span>
             <form method="POST"
                   action="{{ url_for('event_schedule_remove', event_id=event['id'], entry_id=m['id']) }}">
@@ -116,4 +125,9 @@
   <a href="{{ url_for('leader_events') }}" class="btn btn-ghost">← Voltar aos Eventos</a>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="{{ url_for('static', filename='export-schedule-image.js') }}"></script>
 {% endblock %}
