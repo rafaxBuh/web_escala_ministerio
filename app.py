@@ -95,6 +95,7 @@ class User(UserMixin):
         self.email = row["email"]
         self.role = row["role"]
         self.ministry_id = row["ministry_id"]
+        self.theme = row["theme"]
 
 
 @login_manager.user_loader
@@ -191,6 +192,17 @@ def push_debug():
 def push_unsubscribe():
     data = request.get_json(silent=True) or {}
     models.delete_push_subscription(data.get("endpoint", ""))
+    return "", 204
+
+
+@app.route("/conta/tema", methods=["POST"])
+@login_required
+def update_theme():
+    data = request.get_json(silent=True) or {}
+    theme = data.get("theme")
+    if theme not in ("light", "dark"):
+        abort(400)
+    models.update_user_theme(current_user.id, theme)
     return "", 204
 
 
