@@ -67,39 +67,33 @@ def db_conn():
 
 
 def _migrate_role_constraint():
-    """
-    Remove qualquer check constraint existente na coluna 'role' da tabela users
-    e adiciona a constraint correta com 'recruta'. Usa autocommit para DDL seguro.
-    """
     raw = psycopg2.connect(DATABASE_URL)
     raw.autocommit = True
     cur = raw.cursor()
     try:
-        # Busca nomes de todas as check constraints que mencionam 'role'
+        # Drop constraints antigas que mencionam 'role' (exceto a correta)
         cur.execute(
             "SELECT conname FROM pg_constraint"
             " WHERE conrelid = 'users'::regclass"
             "   AND contype = 'c'"
-            "   AND pg_get_constraintdef(oid) LIKE %s",
+            "   AND pg_get_constraintdef(oid) LIKE %s"
+            "   AND conname != 'users_role_check'",
             ('%role%',),
         )
         for (name,) in cur.fetchall():
-            try:
-                cur.execute(
-                    psycopg2.sql.SQL("ALTER TABLE users DROP CONSTRAINT {}").format(
-                        psycopg2.sql.Identifier(name)
-                    )
-                )
-            except Exception:
-                pass
-        # Adiciona a constraint atualizada (ignora se já existe)
-        try:
             cur.execute(
-                "ALTER TABLE users ADD CONSTRAINT users_role_check"
-                " CHECK(role IN ('volunteer', 'recruta', 'ministry_leader', 'general_leader'))"
+                psycopg2.sql.SQL("ALTER TABLE users DROP CONSTRAINT IF EXISTS {}").format(
+                    psycopg2.sql.Identifier(name)
+                )
             )
-        except Exception:
-            pass
+        # Adiciona sem erro se já existir
+        cur.execute("""
+            DO $$ BEGIN
+                ALTER TABLE users ADD CONSTRAINT users_role_check
+                    CHECK(role IN ('volunteer', 'recruta', 'ministry_leader', 'general_leader'));
+            EXCEPTION WHEN duplicate_object THEN NULL;
+            END $$;
+        """)
     finally:
         cur.close()
         raw.close()
