@@ -896,7 +896,6 @@ html, body {
 
 @media (max-width: 640px) {
   .theme-toggle { order: 98; margin-left: auto; }
-  .nav-hamburger { margin-left: .375rem; }
 }
 
 /* ── Switch Deslizante de Tema (Dark Mode) ──────────────────────────────────── */
