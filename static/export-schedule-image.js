@@ -1,3 +1,4 @@
+
 /* ── Exportar Escala como Imagem (PNG) ──────────────────────────────────────
  * Gera um card estilizado com a identidade visual do Zelo a partir dos dados
  * já presentes na página (sem chamada ao servidor) e baixa como PNG usando
@@ -107,7 +108,6 @@
     const card = buildCardShell(ministryName, `Escala de ${periodLabel}`);
     const body = card.querySelector('[data-zelo-body]');
 
-    const weekBlocks = document.querySelectorAll('#schedule-readonly-block > div > div');
     let html = '';
     document.querySelectorAll('[data-week-block]').forEach((block) => {
       const label = block.querySelector('[data-week-label]')?.textContent?.trim() || '';
