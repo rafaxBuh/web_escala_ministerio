@@ -33,6 +33,15 @@ def update_user(user_id, name, email, role, ministry_id):
         conn.commit()
 
 
+def update_user_theme(user_id, theme):
+    with db_conn() as conn:
+        conn.execute(
+            "UPDATE users SET theme=%s WHERE id=%s",
+            (theme, user_id),
+        )
+        conn.commit()
+
+
 def update_user_password(user_id, password_hash):
     with db_conn() as conn:
         conn.execute("UPDATE users SET password_hash=%s WHERE id=%s", (password_hash, user_id))
