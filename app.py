@@ -1334,6 +1334,7 @@ def admin_events():
 def admin_create_event():
     title       = request.form.get("title", "").strip()
     event_date  = request.form.get("event_date", "").strip()
+    end_date    = request.form.get("end_date", "").strip() or None
     event_time  = request.form.get("event_time", "").strip() or None
     description = request.form.get("description", "").strip() or None
     if not title or not event_date:
@@ -1341,7 +1342,7 @@ def admin_create_event():
         return redirect(url_for("admin_events"))
     for_leaders = request.form.get("target") != "all"
     notify_all = not for_leaders
-    models.create_event(title, event_date, description, for_leaders=for_leaders, notify_all=notify_all, event_time=event_time)
+    models.create_event(title, event_date, description, for_leaders=for_leaders, notify_all=notify_all, event_time=event_time, end_date=end_date)
     audience = "líderes" if for_leaders else "todos"
     flash(f'Evento "{title}" criado para {audience}!', "success")
     return redirect(url_for("admin_events"))
@@ -1367,12 +1368,13 @@ def leader_create_event():
         abort(403)
     title       = request.form.get("title", "").strip()
     event_date  = request.form.get("event_date", "").strip()
+    end_date    = request.form.get("end_date", "").strip() or None
     event_time  = request.form.get("event_time", "").strip() or None
     description = request.form.get("description", "").strip() or None
     if not title or not event_date:
         flash("Título e data são obrigatórios.", "error")
         return redirect(url_for("leader_events"))
-    models.create_event(title, event_date, description, ministry_id=mid, notify_all=True, event_time=event_time)
+    models.create_event(title, event_date, description, ministry_id=mid, notify_all=True, event_time=event_time, end_date=end_date)
     flash(f'Evento "{title}" criado!', "success")
     return redirect(url_for("leader_events"))
 

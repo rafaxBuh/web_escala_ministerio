@@ -389,11 +389,11 @@ def get_event(event_id):
         ).fetchone()
 
 
-def create_event(title, event_date_iso, description=None, ministry_id=None, for_leaders=False, notify_all=False, event_time=None):
+def create_event(title, event_date_iso, description=None, ministry_id=None, for_leaders=False, notify_all=False, event_time=None, end_date=None):
     with db_conn() as conn:
         conn.execute(
-            "INSERT INTO events (title, event_date, event_time, description, ministry_id, for_leaders, notify_all) VALUES (%s,%s,%s,%s,%s,%s,%s)",
-            (title.strip(), event_date_iso, event_time or None, description, ministry_id, for_leaders, notify_all),
+            "INSERT INTO events (title, event_date, event_time, description, ministry_id, for_leaders, notify_all, end_date) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+            (title.strip(), event_date_iso, event_time or None, description, ministry_id, for_leaders, notify_all, end_date or None),
         )
         conn.commit()
 

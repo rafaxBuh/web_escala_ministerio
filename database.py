@@ -185,6 +185,7 @@ def init_db():
         conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS ministry_id INTEGER REFERENCES ministries(id) ON DELETE CASCADE")
         conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS for_leaders BOOLEAN NOT NULL DEFAULT FALSE")
         conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS notify_all BOOLEAN NOT NULL DEFAULT FALSE")
+        conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS end_date TEXT")
         conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS event_time TEXT")
 
         conn.execute("""

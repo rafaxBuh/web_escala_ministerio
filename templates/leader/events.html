@@ -22,14 +22,18 @@
   </div>
   <div class="card-body">
     <form method="POST" action="{{ url_for('leader_create_event') }}">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.75rem;">
         <div class="form-group">
           <label>Título <span style="color:var(--danger);">*</span></label>
           <input type="text" name="title" placeholder="ex.: Ensaio especial" required autofocus>
         </div>
         <div class="form-group">
-          <label>Data <span style="color:var(--danger);">*</span></label>
+          <label>Data início <span style="color:var(--danger);">*</span></label>
           <input type="date" name="event_date" required>
+        </div>
+        <div class="form-group">
+          <label>Data final <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
+          <input type="date" name="end_date">
         </div>
         <div class="form-group">
           <label>Horário <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
@@ -66,6 +70,7 @@
         <tr>
           <td style="white-space:nowrap;">
             {{ ev['event_date'][8:10] }}/{{ ev['event_date'][5:7] }}/{{ ev['event_date'][:4] }}
+            {% if ev.get('end_date') %} – {{ ev['end_date'][8:10] }}/{{ ev['end_date'][5:7] }}/{{ ev['end_date'][:4] }}{% endif %}
             {% if ev['event_time'] %}<br><span style="color:var(--text-muted);font-size:.8125rem;">{{ ev['event_time'][:5] }}</span>{% endif %}
           </td>
           <td style="font-weight:600;">{{ ev['title'] }}</td>
