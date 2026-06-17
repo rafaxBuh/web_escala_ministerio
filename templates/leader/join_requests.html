@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% block title %}Solicitações — ZELO{% endblock %}
 
@@ -43,7 +44,7 @@
      </div>
      <div style="display:flex;gap:.5rem;flex-shrink:0;align-items:center;">
       <form method="POST" action="{{ url_for('leader_approve_swap', swap_id=s['id']) }}"
-            onsubmit="return confirm('Aprovar troca entre {{ s[\'requester_name\'] }} e {{ s[\'target_name\'] }}?')">
+            onsubmit="return confirm('Aprovar troca entre {{ s['requester_name'] }} e {{ s['target_name'] }}?')">
        <button class="btn btn-success btn-sm" type="submit">Aprovar</button>
       </form>
       <form method="POST" action="{{ url_for('leader_reject_swap', swap_id=s['id']) }}">
