@@ -152,9 +152,11 @@ def init_db():
                 week INTEGER NOT NULL,
                 member1_id INTEGER NOT NULL REFERENCES users(id),
                 member2_id INTEGER NOT NULL REFERENCES users(id),
+                member3_id INTEGER REFERENCES users(id),
                 UNIQUE(period_id, week)
             )
         """)
+        conn.execute("ALTER TABLE schedules ADD COLUMN IF NOT EXISTS member3_id INTEGER REFERENCES users(id)")
 
         conn.execute("""
             CREATE TABLE IF NOT EXISTS pair_restrictions (

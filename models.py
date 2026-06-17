@@ -235,15 +235,16 @@ def get_period_availability_summary(period_id):
 
 # ── Schedules ──────────────────────────────────────────────────────────────────
 
-def save_schedule(period_id, week, member1_id, member2_id):
+def save_schedule(period_id, week, member1_id, member2_id, member3_id=None):
     with db_conn() as conn:
         conn.execute("""
-            INSERT INTO schedules (period_id, week, member1_id, member2_id)
-            VALUES (%s,%s,%s,%s)
+            INSERT INTO schedules (period_id, week, member1_id, member2_id, member3_id)
+            VALUES (%s,%s,%s,%s,%s)
             ON CONFLICT(period_id, week)
             DO UPDATE SET member1_id=excluded.member1_id,
-                          member2_id=excluded.member2_id
-        """, (period_id, week, member1_id, member2_id))
+                          member2_id=excluded.member2_id,
+                          member3_id=excluded.member3_id
+        """, (period_id, week, member1_id, member2_id, member3_id))
         conn.commit()
 
 
@@ -258,10 +259,12 @@ def get_schedule(period_id):
         return conn.execute("""
             SELECT s.week,
                    m1.name AS member1, m1.id AS member1_id,
-                   m2.name AS member2, m2.id AS member2_id
+                   m2.name AS member2, m2.id AS member2_id,
+                   m3.name AS member3, m3.id AS member3_id
             FROM schedules s
             JOIN users m1 ON m1.id = s.member1_id
             JOIN users m2 ON m2.id = s.member2_id
+            LEFT JOIN users m3 ON m3.id = s.member3_id
             WHERE s.period_id = %s
             ORDER BY s.week
         """, (period_id,)).fetchall()

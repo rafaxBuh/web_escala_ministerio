@@ -214,7 +214,7 @@ def push_cron():
             if wk["start"] <= today <= wk["end"]:
                 row = sched_map.get(wk["week"])
                 if row:
-                    for uid in (row["member1_id"], row["member2_id"]):
+                    for uid in filter(None, (row["member1_id"], row["member2_id"], row.get("member3_id"))):
                         push.notify_user(
                             uid,
                             "Esta é a sua semana de servir!",
@@ -463,8 +463,7 @@ def volunteer_dashboard():
                     confirmed_period["end_year"], confirmed_period["end_month"],
                 )
                 for row in confirmed_schedule:
-                    if row["member1_id"] == current_user.id or \
-                       row["member2_id"] == current_user.id:
+                    if current_user.id in (row["member1_id"], row["member2_id"], row.get("member3_id")):
                         wk = wk_dates[row["week"] - 1]
                         my_week_ranges_dash.append((wk["start"], wk["end"]))
             for ev in upcoming:
@@ -541,8 +540,7 @@ def volunteer_agenda():
                     p["year"], p["month"], p["end_year"], p["end_month"]
                 )
                 for row in schedule:
-                    if row["member1_id"] == current_user.id or \
-                       row["member2_id"] == current_user.id:
+                    if current_user.id in (row["member1_id"], row["member2_id"], row.get("member3_id")):
                         wk = week_dates[row["week"] - 1]
                         my_week_ranges.append((wk["start"], wk["end"]))
                 break
@@ -727,13 +725,14 @@ def save_schedule_edits(period_id):
     for wk in week_dates:
         m1 = request.form.get(f"member1_{wk['week']}", type=int)
         m2 = request.form.get(f"member2_{wk['week']}", type=int)
+        m3 = request.form.get(f"member3_{wk['week']}", type=int) or None
         if not m1 or not m2:
             errors.append(f"{wk['label']}: selecione dois voluntários.")
             continue
         if m1 == m2:
             errors.append(f"{wk['label']}: os dois voluntários precisam ser diferentes.")
             continue
-        models.save_schedule(period_id, wk["week"], m1, m2)
+        models.save_schedule(period_id, wk["week"], m1, m2, m3)
 
     if errors:
         for e in errors:

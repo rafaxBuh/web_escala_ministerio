@@ -113,6 +113,12 @@
     <div style="display:flex;flex-direction:column;gap:.25rem;">
      <div class="member-name">{{ row['member1'] }}</div>
      <div class="member-name">{{ row['member2'] }}</div>
+     {% if row.get('member3') %}
+     <div class="member-name" style="display:flex;align-items:center;gap:.4rem;">
+      {{ row['member3'] }}
+      <span class="badge badge-recruta" style="font-size:.65rem;">Recruta</span>
+     </div>
+     {% endif %}
     </div>
    </div>
    {% endfor %}

@@ -74,6 +74,18 @@
      {% endfor %}
     </select>
    </div>
+   {% set recrutas = volunteers | selectattr('role', 'equalto', 'recruta') | list %}
+   {% if recrutas %}
+   <div>
+    <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:.25rem;">Recruta (opcional)</label>
+    <select name="member3_{{ wk.week }}" style="width:100%;">
+     <option value="">— Nenhum —</option>
+     {% for v in recrutas %}
+     <option value="{{ v['id'] }}" {% if cur and cur.get('member3_id') == v['id'] %}selected{% endif %}>{{ v['name'] }}</option>
+     {% endfor %}
+    </select>
+   </div>
+   {% endif %}
   </div>
 
  </div>
@@ -99,6 +111,12 @@
    <div style="display:flex;flex-direction:column;gap:.25rem;">
     <div class="member-name">{{ row['member1'] }}</div>
     <div class="member-name">{{ row['member2'] }}</div>
+    {% if row.get('member3') %}
+    <div class="member-name" style="display:flex;align-items:center;gap:.4rem;">
+     {{ row['member3'] }}
+     <span class="badge badge-recruta" style="font-size:.65rem;">Recruta</span>
+    </div>
+    {% endif %}
    </div>
   </div>
   {% endfor %}
