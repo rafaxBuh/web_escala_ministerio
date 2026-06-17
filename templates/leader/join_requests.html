@@ -16,6 +16,48 @@
 {% endfor %}
 {% endwith %}
 
+{# ── Trocas de escala ────────────────────────────────────────────────────── #}
+{% if swap_requests %}
+<div class="card" style="margin-bottom:1.25rem;border-left:3px solid var(--warning);">
+ <div class="card-header">
+  <span class="card-title">Trocas de escala</span>
+  <span class="badge badge-volunteer">{{ swap_requests|length }}</span>
+ </div>
+ <div class="card-body">
+  <div style="display:flex;flex-direction:column;gap:.75rem;">
+   {% for s in swap_requests %}
+   {% set period_str %}
+    {% if s['end_month'] and s['end_month'] != s['month'] %}{{ s['month'] }}/{{ s['year'] }} – {{ s['end_month'] }}/{{ s['year'] }}{% else %}{{ s['month'] }}/{{ s['year'] }}{% endif %}
+   {% endset %}
+   <div style="padding:.75rem;background:var(--bg);border-radius:var(--radius);">
+    <div style="display:flex;align-items:flex-start;gap:.75rem;flex-wrap:wrap;">
+     <div style="flex:1;min-width:0;">
+      <div style="font-weight:600;">{{ s['requester_name'] }} → {{ s['target_name'] }}</div>
+      <div style="font-size:.8125rem;color:var(--text-muted);margin-top:.2rem;">
+       Período {{ period_str | trim }} · Semana {{ s['requester_week'] }}
+      </div>
+      {% if s['note'] %}
+      <div style="font-size:.8125rem;color:var(--text-muted);margin-top:.2rem;font-style:italic;">"{{ s['note'] }}"</div>
+      {% endif %}
+      <div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem;">{{ s['created_at'][:16] | replace('T',' ') if s['created_at'] else '' }}</div>
+     </div>
+     <div style="display:flex;gap:.5rem;flex-shrink:0;align-items:center;">
+      <form method="POST" action="{{ url_for('leader_approve_swap', swap_id=s['id']) }}"
+            onsubmit="return confirm('Aprovar troca entre {{ s[\'requester_name\'] }} e {{ s[\'target_name\'] }}?')">
+       <button class="btn btn-success btn-sm" type="submit">Aprovar</button>
+      </form>
+      <form method="POST" action="{{ url_for('leader_reject_swap', swap_id=s['id']) }}">
+       <button class="btn btn-danger btn-sm" type="submit">Recusar</button>
+      </form>
+     </div>
+    </div>
+   </div>
+   {% endfor %}
+  </div>
+ </div>
+</div>
+{% endif %}
+
 {# ── Novos cadastros ─────────────────────────────────────────────────────── #}
 <div class="card" style="margin-bottom:1.25rem;">
  <div class="card-header">

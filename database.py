@@ -188,6 +188,20 @@ def init_db():
         conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS end_date TEXT")
 
         conn.execute("""
+            CREATE TABLE IF NOT EXISTS schedule_swap_requests (
+                id SERIAL PRIMARY KEY,
+                requester_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                target_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                period_id    INTEGER NOT NULL REFERENCES periods(id) ON DELETE CASCADE,
+                requester_week INTEGER NOT NULL,
+                note TEXT,
+                status TEXT NOT NULL DEFAULT 'pending'
+                    CHECK(status IN ('pending', 'approved', 'rejected')),
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS event_schedule_members (
                 id SERIAL PRIMARY KEY,
                 event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,

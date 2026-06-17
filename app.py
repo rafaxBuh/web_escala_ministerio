@@ -134,7 +134,8 @@ def inject_globals():
         if current_user.is_authenticated and current_user.role == "ministry_leader" and current_user.ministry_id:
             mid = current_user.ministry_id
             pending = (models.count_pending_requests_for_ministry(mid)
-                       + models.count_pending_registrations_for_ministry(mid))
+                       + models.count_pending_registrations_for_ministry(mid)
+                       + models.count_pending_swaps_for_ministry(mid))
     except Exception:
         pass
     return dict(MONTHS=MONTHS, today=date.today(),
@@ -474,6 +475,13 @@ def volunteer_dashboard():
         else:
             next_event = upcoming[0]
 
+    # Dados para solicitação de troca
+    ministry_members = []
+    my_swap_requests = []
+    if confirmed_period and current_user.ministry_id:
+        ministry_members = models.list_users_by_ministry(current_user.ministry_id)
+        my_swap_requests = models.list_my_swap_requests(current_user.id, confirmed_period["id"])
+
     return render_template(
         "volunteer/dashboard.html",
         ministry=ministry,
@@ -482,6 +490,8 @@ def volunteer_dashboard():
         confirmed_schedule=confirmed_schedule,
         confirmed_period=confirmed_period,
         next_event=next_event,
+        ministry_members=ministry_members,
+        my_swap_requests=my_swap_requests,
     )
 
 
@@ -1049,9 +1059,11 @@ def leader_join_requests():
         abort(403)
     requests_list = models.list_pending_requests_for_ministry(mid)
     registrations  = models.list_pending_registrations_for_ministry(mid)
+    swap_requests  = models.list_pending_swaps_for_ministry(mid)
     return render_template("leader/join_requests.html",
                            requests=requests_list,
-                           registrations=registrations)
+                           registrations=registrations,
+                           swap_requests=swap_requests)
 
 
 @app.route("/lider/solicitacoes/<int:request_id>/aprovar", methods=["POST"])
@@ -1149,6 +1161,61 @@ def leader_reject_registration(reg_id):
 
     models.reject_pending_registration(reg_id)
     flash(f"Cadastro de {reg['name']} recusado.", "info")
+    return redirect(url_for("leader_join_requests"))
+
+
+# ── Schedule Swap Requests ─────────────────────────────────────────────────────
+
+@app.route("/voluntario/solicitar-troca", methods=["POST"])
+@login_required
+def create_swap_request():
+    if current_user.role not in ("volunteer", "recruta"):
+        abort(403)
+    period_id     = request.form.get("period_id", type=int)
+    requester_week = request.form.get("requester_week", type=int)
+    target_id     = request.form.get("target_id", type=int)
+    note          = request.form.get("note", "").strip() or None
+
+    if not all([period_id, requester_week, target_id]):
+        flash("Dados incompletos.", "error")
+        return redirect(url_for("volunteer_dashboard"))
+
+    if target_id == current_user.id:
+        flash("Você não pode solicitar troca consigo mesmo.", "error")
+        return redirect(url_for("volunteer_dashboard"))
+
+    result = models.create_swap_request(
+        current_user.id, target_id, period_id, requester_week, note
+    )
+    if result is None:
+        flash("Já existe uma solicitação pendente para essa semana.", "warning")
+    else:
+        flash("Solicitação de troca enviada. Aguarde aprovação do líder.", "success")
+    return redirect(url_for("volunteer_dashboard"))
+
+
+@app.route("/lider/trocas/<int:swap_id>/aprovar", methods=["POST"])
+@leader_required
+def leader_approve_swap(swap_id):
+    mid = current_user.ministry_id
+    if not mid:
+        abort(403)
+    ok = models.approve_swap(swap_id)
+    if ok:
+        flash("Troca de escala aprovada com sucesso.", "success")
+    else:
+        flash("Não foi possível aprovar a troca.", "error")
+    return redirect(url_for("leader_join_requests"))
+
+
+@app.route("/lider/trocas/<int:swap_id>/recusar", methods=["POST"])
+@leader_required
+def leader_reject_swap(swap_id):
+    mid = current_user.ministry_id
+    if not mid:
+        abort(403)
+    models.reject_swap(swap_id)
+    flash("Solicitação de troca recusada.", "info")
     return redirect(url_for("leader_join_requests"))
 
 

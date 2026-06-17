@@ -789,3 +789,123 @@ def reject_pending_registration(reg_id):
             (reg_id,),
         )
         conn.commit()
+
+
+# ── Schedule Swap Requests ─────────────────────────────────────────────────────
+
+def create_swap_request(requester_id, target_id, period_id, requester_week, note=None):
+    with db_conn() as conn:
+        existing = conn.execute(
+            "SELECT id FROM schedule_swap_requests"
+            " WHERE requester_id=%s AND period_id=%s AND requester_week=%s AND status='pending'",
+            (requester_id, period_id, requester_week),
+        ).fetchone()
+        if existing:
+            return None
+        conn.execute(
+            "INSERT INTO schedule_swap_requests"
+            " (requester_id, target_id, period_id, requester_week, note)"
+            " VALUES (%s,%s,%s,%s,%s)",
+            (requester_id, target_id, period_id, requester_week, note or None),
+        )
+        conn.commit()
+        return True
+
+
+def list_pending_swaps_for_ministry(ministry_id):
+    with db_conn() as conn:
+        return conn.execute("""
+            SELECT ssr.*,
+                   req.name AS requester_name,
+                   tgt.name AS target_name,
+                   p.year, p.month, p.end_month
+            FROM schedule_swap_requests ssr
+            JOIN users req ON req.id = ssr.requester_id
+            JOIN users tgt ON tgt.id = ssr.target_id
+            JOIN periods p  ON p.id  = ssr.period_id
+            WHERE p.ministry_id = %s AND ssr.status = 'pending'
+            ORDER BY ssr.created_at DESC
+        """, (ministry_id,)).fetchall()
+
+
+def count_pending_swaps_for_ministry(ministry_id):
+    with db_conn() as conn:
+        row = conn.execute("""
+            SELECT COUNT(*) AS n
+            FROM schedule_swap_requests ssr
+            JOIN periods p ON p.id = ssr.period_id
+            WHERE p.ministry_id = %s AND ssr.status = 'pending'
+        """, (ministry_id,)).fetchone()
+        return row["n"] if row else 0
+
+
+def get_swap_request(request_id):
+    with db_conn() as conn:
+        return conn.execute(
+            "SELECT * FROM schedule_swap_requests WHERE id=%s",
+            (request_id,),
+        ).fetchone()
+
+
+def approve_swap(request_id):
+    req = get_swap_request(request_id)
+    if not req or req["status"] != "pending":
+        return False
+    with db_conn() as conn:
+        target_slot = conn.execute("""
+            SELECT week,
+                   CASE WHEN member1_id=%s THEN 1
+                        WHEN member2_id=%s THEN 2
+                        WHEN member3_id=%s THEN 3
+                   END AS position
+            FROM schedules
+            WHERE period_id=%s
+              AND (member1_id=%s OR member2_id=%s OR member3_id=%s)
+        """, (req["target_id"], req["target_id"], req["target_id"],
+              req["period_id"],
+              req["target_id"], req["target_id"], req["target_id"])).fetchone()
+
+        # Replace requester with target in requester's week
+        for col in ("member1_id", "member2_id", "member3_id"):
+            conn.execute(
+                f"UPDATE schedules SET {col}=%s"
+                f" WHERE period_id=%s AND week=%s AND {col}=%s",
+                (req["target_id"], req["period_id"], req["requester_week"], req["requester_id"]),
+            )
+
+        # If target was already scheduled, put requester in target's slot
+        if target_slot and target_slot["week"] != req["requester_week"]:
+            pos = target_slot["position"]
+            col = {1: "member1_id", 2: "member2_id", 3: "member3_id"}.get(pos)
+            if col:
+                conn.execute(
+                    f"UPDATE schedules SET {col}=%s"
+                    f" WHERE period_id=%s AND week=%s AND {col}=%s",
+                    (req["requester_id"], req["period_id"], target_slot["week"], req["target_id"]),
+                )
+
+        conn.execute(
+            "UPDATE schedule_swap_requests SET status='approved' WHERE id=%s",
+            (request_id,),
+        )
+        conn.commit()
+    return True
+
+
+def reject_swap(request_id):
+    with db_conn() as conn:
+        conn.execute(
+            "UPDATE schedule_swap_requests SET status='rejected' WHERE id=%s",
+            (request_id,),
+        )
+        conn.commit()
+
+
+def list_my_swap_requests(user_id, period_id):
+    with db_conn() as conn:
+        return conn.execute("""
+            SELECT ssr.*, tgt.name AS target_name
+            FROM schedule_swap_requests ssr
+            JOIN users tgt ON tgt.id = ssr.target_id
+            WHERE ssr.requester_id=%s AND ssr.period_id=%s AND ssr.status='pending'
+        """, (user_id, period_id)).fetchall()
