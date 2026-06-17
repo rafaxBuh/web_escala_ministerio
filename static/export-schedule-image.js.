@@ -2,7 +2,7 @@
  * Gera um card estilizado com a identidade visual do Zelo a partir dos dados
  * já presentes na página (sem chamada ao servidor) e baixa como PNG usando
  * html2canvas. Funciona tanto na tela de Escala (períodos semanais) quanto
- * na tela de Escala de Evento (dias + turnos).
+ * na tela de Escala de Evento (dias + turnos)
  * ──────────────────────────────────────────────────────────────────────── */
 
 (function () {
