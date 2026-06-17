@@ -27,6 +27,53 @@
   --shadow-md: 0 4px 16px rgba(0,0,0,.08);
 }
 
+/* ── Dark Mode Variables ────────────────────────────────────────────────────── */
+html.dark-mode {
+  --primary:         #20E1C9;
+  --primary-dark:    #20E1C9;
+  --primary-light:   rgba(32, 225, 201, 0.15);
+  --secondary:       #a78bfa;
+  --secondary-light: rgba(167, 139, 250, 0.15);
+
+  --success:       #34d399;
+  --success-light: rgba(52, 211, 153, 0.15);
+  --warning:       #fbbf24;
+  --warning-light: rgba(251, 191, 36, 0.15);
+  --danger:        #f87171;
+  --danger-light:  rgba(248, 113, 113, 0.15);
+  --info:          #60a5fa;
+  --info-light:    rgba(96, 165, 250, 0.15);
+
+  --text:       #F7F7FA;
+  --text-muted: #9ca3af;
+  --border:     #2D2D34;
+  --bg:         #121214;
+  --white:      #1E1E22;
+
+  --shadow:    0 2px 8px rgba(0,0,0,.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.5);
+}
+
+/* Suavidade na alternância do tema */
+body, .navbar, .card, .stat-card, .nav-mobile, .footer, input, select, textarea, table, td, th, tr, .nav-link, .nav-mobile-link, .badge, .alert, .theme-toggle, .slider-toggle {
+  transition: background 0.25s ease, background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Ajustes finos de contraste para Dark Mode */
+html.dark-mode .badge-admin { color: #c084fc; background: var(--secondary-light); }
+html.dark-mode .badge-leader { color: var(--primary); background: var(--primary-light); }
+html.dark-mode .badge-volunteer { background: var(--white); color: var(--text-muted); border-color: var(--border); }
+html.dark-mode .badge-recruta { color: #fdba74; background: rgba(253, 186, 116, 0.15); border-color: rgba(253, 186, 116, 0.3); }
+
+html.dark-mode .badge-open { color: #34d399; background: var(--success-light); }
+html.dark-mode .badge-closed { color: #fbbf24; background: var(--warning-light); }
+html.dark-mode .badge-confirmed { color: var(--primary); background: var(--primary-light); }
+
+html.dark-mode .alert-success { color: #34d399; background: var(--success-light); border-color: rgba(52, 211, 153, 0.3); }
+html.dark-mode .alert-error { color: #f87171; background: var(--danger-light); border-color: rgba(248, 113, 113, 0.3); }
+html.dark-mode .alert-warning { color: #fbbf24; background: var(--warning-light); border-color: rgba(251, 191, 36, 0.3); }
+html.dark-mode .alert-info { color: #60a5fa; background: var(--info-light); border-color: rgba(96, 165, 250, 0.3); }
+
 /* ── Reset ──────────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -312,7 +359,7 @@ td {
 }
 
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: #fafafa; }
+tr:hover td { background: var(--bg); }
 
 .td-actions { display: flex; gap: .5rem; align-items: center; }
 
@@ -823,12 +870,9 @@ html, body {
 /* ── Escala de evento especial ───────────────────────────────────────────────── */
 .event-sched-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: .75rem;
   margin-bottom: 1.25rem;
-}
-@media (max-width: 500px) {
-  .event-sched-grid { grid-template-columns: 1fr; }
 }
 
 /* ── Botão de alternância de tema ────────────────────────────────────────────── */
@@ -853,4 +897,126 @@ html, body {
 @media (max-width: 640px) {
   .theme-toggle { order: 98; margin-left: auto; }
   .nav-hamburger { margin-left: .375rem; }
+}
+
+/* ── Switch Deslizante de Tema (Dark Mode) ──────────────────────────────────── */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider-toggle {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border);
+  transition: 0.3s;
+  border-radius: 22px;
+}
+.slider-toggle:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--white);
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+input:checked + .slider-toggle {
+  background-color: var(--primary);
+}
+input:checked + .slider-toggle:before {
+  transform: translateX(22px);
+}
+
+/* ── Tabela Responsiva para Dispositivos Móveis ──────────────────────────────── */
+.event-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: .75rem;
+}
+
+@media (max-width: 640px) {
+  .responsive-table table, 
+  .responsive-table thead, 
+  .responsive-table tbody, 
+  .responsive-table th, 
+  .responsive-table td, 
+  .responsive-table tr {
+    display: block !important;
+  }
+  
+  .responsive-table thead {
+    display: none !important;
+  }
+  
+  .responsive-table tr {
+    border-bottom: 1px solid var(--border) !important;
+    padding: 1rem 0.5rem !important;
+    position: relative !important;
+  }
+  
+  .responsive-table tr:last-child {
+    border-bottom: none !important;
+  }
+  
+  .responsive-table td {
+    border: none !important;
+    padding: 0.35rem 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;
+    text-align: left !important;
+  }
+  
+  /* Formatação de hierarquia no card mobile */
+  .responsive-table td:nth-child(1) {
+    /* Data */
+    font-size: 0.8rem !important;
+    color: var(--text-muted) !important;
+    font-weight: 500 !important;
+  }
+  
+  .responsive-table td:nth-child(2) {
+    /* Título */
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    color: var(--text) !important;
+    margin-top: 0.125rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  .responsive-table td:nth-child(3) {
+    /* Descrição */
+    font-size: 0.875rem !important;
+    color: var(--text-muted) !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .responsive-table td:nth-child(4) {
+    /* Distintivo (Visível para/Origem) */
+    display: inline-block !important;
+    width: auto !important;
+    margin-right: 1rem !important;
+  }
+  
+  .responsive-table td:nth-child(5) {
+    /* Ações */
+    margin-top: 0.75rem !important;
+    padding-top: 0.5rem !important;
+    border-top: 1px dashed var(--border) !important;
+  }
 }

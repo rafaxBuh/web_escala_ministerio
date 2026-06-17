@@ -22,7 +22,7 @@
  </div>
  <div class="card-body">
  <form method="POST" action="{{ url_for('admin_create_event') }}">
- <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.75rem;">
+ <div class="event-form-grid">
  <div class="form-group">
  <label for="title">Título <span style="color:var(--danger);">*</span></label>
  <input type="text" id="title" name="title"
@@ -67,7 +67,7 @@
 {# ── Lista de eventos ───────────────────────────────────────────────────────── #}
 {% if events %}
 <div class="card">
- <div class="table-wrap">
+ <div class="table-wrap responsive-table">
  <table>
  <thead>
  <tr>

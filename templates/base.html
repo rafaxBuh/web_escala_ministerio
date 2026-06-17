@@ -13,6 +13,17 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark-mode');
+      } else {
+        document.documentElement.classList.remove('dark-mode');
+      }
+    })();
+  </script>
 </head>
 <body>
 
@@ -46,6 +57,10 @@
       <span class="badge {% if current_user.role == 'general_leader' %}badge-admin{% elif current_user.role == 'ministry_leader' %}badge-leader{% elif current_user.role == 'recruta' %}badge-recruta{% else %}badge-volunteer{% endif %}">
         {%- if current_user.role == 'general_leader' %}Admin{% elif current_user.role == 'ministry_leader' %}Líder{% elif current_user.role == 'recruta' %}Recruta{% else %}Voluntário{% endif -%}
       </span>
+      <label class="switch" title="Alternar tema" style="margin-left: 0.25rem; margin-right: 0.25rem;">
+        <input type="checkbox" id="theme-switch-desktop" onchange="toggleDarkMode(this.checked)">
+        <span class="slider-toggle"></span>
+      </label>
       <a href="{{ url_for('logout') }}" class="btn btn-sm btn-ghost">Sair</a>
     </div>
 
@@ -77,6 +92,13 @@
       <a href="{{ url_for('volunteer_dashboard') }}" class="nav-mobile-link">Início</a>
       <a href="{{ url_for('volunteer_agenda') }}" class="nav-mobile-link">Agenda</a>
     {% endif %}
+    <div class="nav-mobile-link" style="display:flex;align-items:center;justify-content:space-between;border-bottom:none;">
+      <span>Modo Escuro</span>
+      <label class="switch" title="Alternar tema">
+        <input type="checkbox" id="theme-switch-mobile" onchange="toggleDarkMode(this.checked)">
+        <span class="slider-toggle"></span>
+      </label>
+    </div>
     <div class="nav-mobile-footer">
       <div>
         <span class="user-name">{{ current_user.name }}</span>
@@ -183,6 +205,28 @@ function applySwUpdate() {
   if (banner) banner.querySelector('button').textContent = 'Atualizando…';
   if (window._pendingSW) window._pendingSW.postMessage('SKIP_WAITING');
 }
+
+function toggleDarkMode(isDark) {
+  if (isDark) {
+    document.documentElement.classList.add('dark-mode');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.documentElement.classList.remove('dark-mode');
+    localStorage.setItem('theme', 'light');
+  }
+  const deskSwitch = document.getElementById('theme-switch-desktop');
+  const mobSwitch = document.getElementById('theme-switch-mobile');
+  if (deskSwitch) deskSwitch.checked = isDark;
+  if (mobSwitch) mobSwitch.checked = isDark;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const isDark = document.documentElement.classList.contains('dark-mode');
+  const deskSwitch = document.getElementById('theme-switch-desktop');
+  const mobSwitch = document.getElementById('theme-switch-mobile');
+  if (deskSwitch) deskSwitch.checked = isDark;
+  if (mobSwitch) mobSwitch.checked = isDark;
+});
 
 function toggleMenu() {
   var btn     = document.getElementById('nav-hamburger');
