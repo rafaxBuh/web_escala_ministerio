@@ -18,9 +18,17 @@
  <h1 class="page-title">{{ ministry['name'] }}</h1>
  <p class="page-subtitle">Escala de {{ period_label(period) }}</p>
  </div>
+ <div style="display:flex;align-items:center;gap:.625rem;flex-wrap:wrap;">
+ {% if schedule %}
+ <button type="button" class="btn btn-ghost btn-sm" id="btn-export-schedule-image"
+   onclick="exportPeriodScheduleImage('{{ ministry['name']|e }}', '{{ period_label(period)|e }}')">
+   Exportar Imagem
+ </button>
+ {% endif %}
  <span class="badge {% if period['status'] == 'open' %}badge-open{% elif period['status'] == 'closed' %}badge-closed{% else %}badge-confirmed{% endif %}" style="font-size:.875rem;padding:.4rem .9rem;">
  {%- if period['status'] == 'open' %}Aberto{% elif period['status'] == 'closed' %}Aguardando confirmação{% else %}Confirmado{% endif -%}
  </span>
+ </div>
 </div>
 
 {% set week_dates = get_week_dates(period['year'], period['month'], period['end_year'], period['end_month']) %}
@@ -101,18 +109,18 @@
 {# ── Read-only schedule (status = confirmed or admin viewing) ──────────────── #}
 {% elif schedule %}
 
-<div class="card" style="margin-bottom:1.5rem;">
+<div class="card" style="margin-bottom:1.5rem;" id="schedule-readonly-block">
  <div style="display:flex;flex-direction:column;">
   {% for row in schedule %}
-  <div style="padding:.875rem 1.25rem;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
-   <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:.375rem;">
+  <div style="padding:.875rem 1.25rem;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}" data-week-block>
+   <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:.375rem;" data-week-label>
     Semana {{ row['week'] }} — {{ week_dates[row['week'] - 1].label }}
    </div>
    <div style="display:flex;flex-direction:column;gap:.25rem;">
-    <div class="member-name">{{ row['member1'] }}</div>
-    <div class="member-name">{{ row['member2'] }}</div>
+    <div class="member-name" data-week-member="{{ row['member1']|e }}">{{ row['member1'] }}</div>
+    <div class="member-name" data-week-member="{{ row['member2']|e }}">{{ row['member2'] }}</div>
     {% if row.get('member3') %}
-    <div class="member-name" style="display:flex;align-items:center;gap:.4rem;">
+    <div class="member-name" data-week-member="{{ row['member3']|e }}" data-week-badge="Recruta" style="display:flex;align-items:center;gap:.4rem;">
      {{ row['member3'] }}
      <span class="badge badge-recruta" style="font-size:.65rem;">Recruta</span>
     </div>
@@ -159,4 +167,9 @@
 </div>
 {% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="{{ url_for('static', filename='export-schedule-image.js') }}"></script>
 {% endblock %}
