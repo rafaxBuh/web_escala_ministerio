@@ -1,4 +1,4 @@
-const CACHE = 'zelo-v4';
+const CACHE = 'zelo-v5';
 const STATIC = [
   '/static/style.css',
   '/static/manifest.json',
@@ -8,7 +8,11 @@ const STATIC = [
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC)));
-  self.skipWaiting();
+  // Não chama skipWaiting aqui — aguarda confirmação do usuário via postMessage
+});
+
+self.addEventListener('message', e => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {

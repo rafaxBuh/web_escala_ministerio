@@ -142,7 +142,44 @@ if ('serviceWorker' in navigator) {
     {% if current_user.is_authenticated %}
     subscribePush(reg);
     {% endif %}
+
+    function promptUpdate(sw) {
+      if (document.getElementById('sw-update-banner')) return;
+      var banner = document.createElement('div');
+      banner.id = 'sw-update-banner';
+      banner.innerHTML =
+        '<span style="flex:1;">Nova versão disponível!</span>' +
+        '<button onclick="applySwUpdate()" style="background:#fff;color:#1F1F24;border:none;border-radius:6px;padding:.35rem .85rem;font-weight:700;cursor:pointer;font-size:.875rem;">Atualizar</button>' +
+        '<button onclick="this.closest(\'#sw-update-banner\').remove()" style="background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer;padding:0 .25rem;line-height:1;">&times;</button>';
+      banner.style.cssText = 'position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:.75rem;background:#1F1F24;color:#fff;padding:.75rem 1.1rem;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.35);font-size:.9rem;font-family:inherit;max-width:calc(100vw - 2rem);width:max-content;';
+      document.body.appendChild(banner);
+      window._pendingSW = sw;
+    }
+
+    if (reg.waiting && navigator.serviceWorker.controller) {
+      promptUpdate(reg.waiting);
+    }
+
+    reg.addEventListener('updatefound', function () {
+      var installing = reg.installing;
+      installing.addEventListener('statechange', function () {
+        if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+          promptUpdate(installing);
+        }
+      });
+    });
   });
+
+  var _swRefreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (!_swRefreshing) { _swRefreshing = true; window.location.reload(); }
+  });
+}
+
+function applySwUpdate() {
+  var banner = document.getElementById('sw-update-banner');
+  if (banner) banner.querySelector('button').textContent = 'Atualizando…';
+  if (window._pendingSW) window._pendingSW.postMessage('SKIP_WAITING');
 }
 
 function toggleMenu() {
