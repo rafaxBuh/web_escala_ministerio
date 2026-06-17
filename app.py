@@ -837,7 +837,8 @@ def leader_members():
     if not mid:
         abort(403)
     members = models.list_users_by_ministry(mid)
-    return render_template("leader/members.html", members=members)
+    companion_counts = models.get_recruta_companion_counts(mid)
+    return render_template("leader/members.html", members=members, companion_counts=companion_counts)
 
 
 @app.route("/lider/membros/novo", methods=["GET", "POST"])

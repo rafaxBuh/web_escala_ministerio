@@ -39,7 +39,12 @@
     <button class="btn btn-warning btn-sm" type="submit">Recrutar</button>
    </form>
    {% elif m['role'] == 'recruta' %}
-   <a href="{{ url_for('leader_recruta_companions', user_id=m['id']) }}" class="btn btn-ghost btn-sm">Acomp.</a>
+   {% set n_comp = companion_counts.get(m['id'], 0) %}
+   <a href="{{ url_for('leader_recruta_companions', user_id=m['id']) }}"
+    class="btn btn-sm {% if n_comp == 0 %}btn-warning{% else %}btn-ghost{% endif %}"
+    title="Definir com quais membros este recruta pode ser escalado">
+    {% if n_comp == 0 %}⚠ Sem vínculo{% else %}Vínculos ({{ n_comp }}){% endif %}
+   </a>
    <form method="POST" action="{{ url_for('leader_promote_recruta', user_id=m['id']) }}"
     onsubmit="return confirm('Promover {{ m.name }} a voluntário?')">
     <button class="btn btn-primary btn-sm" type="submit">Promover</button>

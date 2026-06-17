@@ -552,6 +552,19 @@ def list_recruta_companions(recruta_id):
         """, (recruta_id,)).fetchall()
 
 
+def get_recruta_companion_counts(ministry_id):
+    """Retorna dict {recruta_id: count} para recrutas do ministério."""
+    with db_conn() as conn:
+        rows = conn.execute("""
+            SELECT rc.recruta_id, COUNT(*) AS n
+            FROM recruta_companions rc
+            JOIN users u ON u.id = rc.recruta_id
+            WHERE u.ministry_id = %s
+            GROUP BY rc.recruta_id
+        """, (ministry_id,)).fetchall()
+    return {row["recruta_id"]: row["n"] for row in rows}
+
+
 def get_recruta_companions_dict(ministry_id):
     """
     Retorna dict {recruta_id: set(companion_ids)} para recrutas com pelo menos
