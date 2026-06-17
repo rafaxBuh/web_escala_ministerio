@@ -113,7 +113,7 @@ def generate_period_schedule(period_id: int, ministry_id: int, total_weeks: int 
             member3 = None
             for recruta in recruta_members:
                 companions = recruta_companions.get(recruta["id"], set())
-                if not companions or pair_ids & companions:
+                if companions and pair_ids & companions:
                     member3 = recruta
                     break
 
