@@ -1,3 +1,4 @@
+
 import os
 import datetime
 import psycopg2
@@ -186,6 +187,7 @@ def init_db():
         conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS for_leaders BOOLEAN NOT NULL DEFAULT FALSE")
         conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS notify_all BOOLEAN NOT NULL DEFAULT FALSE")
         conn.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS end_date TEXT")
+        conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS theme TEXT NOT NULL DEFAULT 'light' CHECK(theme IN ('light', 'dark'))")
 
         conn.execute("""
             CREATE TABLE IF NOT EXISTS schedule_swap_requests (
