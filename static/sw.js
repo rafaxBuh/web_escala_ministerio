@@ -1,4 +1,4 @@
-const CACHE = 'zelo-v5';
+const CACHE = 'zelo-v6';
 const STATIC = [
   '/static/style.css',
   '/static/manifest.json',
@@ -27,6 +27,19 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
+
+  // CSS sempre network-first: nunca deixa o usuário travado numa versão antiga.
+  // Cache só entra como fallback se a rede falhar (ex: offline).
+  if (url.pathname === '/static/style.css') {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
 
   if (url.pathname.startsWith('/static/')) {
     e.respondWith(
