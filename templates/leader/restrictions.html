@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Restrições de Dupla — ZELO{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+ <a href="{{ url_for('leader_dashboard') }}">Painel</a>
+ <span class="breadcrumb-sep">›</span>
+ <span>Restrições de Dupla</span>
+</div>
+
+<div class="page-header">
+ <h1 class="page-title">Restrições de Dupla</h1>
+ <p class="page-subtitle">Pares de voluntários que <strong>não</strong> devem ser escalados juntos.</p>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+
+ {# ── Add restriction form ─────────────────────────────────────────────────── #}
+ <div class="card">
+ <div class="card-header">
+ <span class="card-title">Adicionar Restrição</span>
+ </div>
+ <div class="card-body">
+ {% if members|length >= 2 %}
+ <form method="POST" action="{{ url_for('add_restriction') }}">
+ <div class="form-group">
+ <label>Voluntário 1</label>
+ <select name="member1_id" required>
+ <option value="">— Selecione —</option>
+ {% for m in members %}
+ <option value="{{ m['id'] }}">{{ m['name'] }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <div class="form-group">
+ <label>Voluntário 2</label>
+ <select name="member2_id" required>
+ <option value="">— Selecione —</option>
+ {% for m in members %}
+ <option value="{{ m['id'] }}">{{ m['name'] }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <button type="submit" class="btn btn-primary">Adicionar Restrição</button>
+ </form>
+ {% else %}
+ <p style="color:var(--text-muted);font-size:.875rem;">
+ É necessário ter pelo menos 2 voluntários no ministério.
+ </p>
+ {% endif %}
+ </div>
+ </div>
+
+ {# ── Existing restrictions ────────────────────────────────────────────────── #}
+ <div class="card">
+ <div class="card-header">
+ <span class="card-title">Restrições Ativas ({{ restrictions|length }})</span>
+ </div>
+ <div class="card-body">
+ {% if restrictions %}
+ <div style="display:flex;flex-direction:column;gap:.625rem;">
+ {% for r in restrictions %}
+ <div style="display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);">
+ <div style="flex:1;font-weight:500;font-size:.9375rem;">
+ {{ r['member1_name'] }}
+ <span style="color:var(--text-muted);font-weight:400;margin:0 .375rem;">+</span>
+ {{ r['member2_name'] }}
+ </div>
+ <form method="POST" action="{{ url_for('remove_restriction', restriction_id=r['id']) }}"
+ onsubmit="return confirm('Remover esta restrição?')">
+ <button class="btn btn-danger-outline btn-sm" type="submit">Remover</button>
+ </form>
+ </div>
+ {% endfor %}
+ </div>
+ {% else %}
+ <div class="empty-state" style="padding:2rem;">
+ <div class="empty-icon"></div>
+ <p class="empty-text">Nenhuma restrição cadastrada.</p>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+
+</div>
+{% endblock %}

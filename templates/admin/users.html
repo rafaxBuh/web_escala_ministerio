@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Usuários — ZELO{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+ <div>
+ <h1 class="page-title">Usuários</h1>
+ <p class="page-subtitle">{{ users|length }} usuário(s) no sistema</p>
+ </div>
+ <a href="{{ url_for('admin_create_user') }}" class="btn btn-primary">+ Novo Usuário</a>
+</div>
+
+<div class="card">
+ <div class="table-wrap">
+ <table class="t-users">
+ <thead>
+ <tr>
+ <th>Nome</th>
+ <th>E-mail</th>
+ <th>Perfil</th>
+ <th>Ministério</th>
+ <th></th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for u in users %}
+ <tr>
+ <td><strong>{{ u['name'] }}</strong></td>
+ <td style="color:var(--text-muted);">{{ u['email'] }}</td>
+ <td>
+ <span class="badge {% if u['role'] == 'general_leader' %}badge-admin{% elif u['role'] == 'ministry_leader' %}badge-leader{% elif u['role'] == 'recruta' %}badge-recruta{% else %}badge-volunteer{% endif %}">
+ {%- if u['role'] == 'general_leader' %}Admin{% elif u['role'] == 'ministry_leader' %}Líder{% elif u['role'] == 'recruta' %}Recruta{% else %}Voluntário{% endif -%}
+ </span>
+ </td>
+ <td>{{ u['ministry_name'] or '—' }}</td>
+ <td>
+ <div class="td-actions">
+ <a href="{{ url_for('admin_edit_user', user_id=u['id']) }}"
+ class="btn btn-ghost btn-sm">Editar</a>
+ {% if u['id'] != current_user.id %}
+ <form method="POST" action="{{ url_for('admin_delete_user', user_id=u['id']) }}"
+ onsubmit="return confirm('Excluir o usuário {{ u['name'] }}?')">
+ <button class="btn btn-danger-outline btn-sm" type="submit">Excluir</button>
+ </form>
+ {% endif %}
+ </div>
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+</div>
+{% endblock %}

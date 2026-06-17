@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Eventos — ZELO{% endblock %}
+
+{% block content %}
+
+<div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+  <div>
+    <h1 class="page-title">Eventos do Ministério</h1>
+    <p class="page-subtitle">{{ events|length }} evento(s) visíveis para o seu ministério</p>
+  </div>
+  <button onclick="document.getElementById('form-new').classList.toggle('hidden')"
+          class="btn btn-primary">+ Novo Evento</button>
+</div>
+
+{# ── Formulário de criação ──────────────────────────────────────────────────── #}
+<div id="form-new" class="card hidden" style="margin-bottom:1.5rem;">
+  <div class="card-header">
+    <span class="card-title">Novo Evento</span>
+    <button type="button"
+            onclick="document.getElementById('form-new').classList.add('hidden')"
+            class="btn btn-ghost btn-sm">Cancelar</button>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('leader_create_event') }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;">
+        <div class="form-group">
+          <label>Título <span style="color:var(--danger);">*</span></label>
+          <input type="text" name="title" placeholder="ex.: Ensaio especial" required autofocus>
+        </div>
+        <div class="form-group">
+          <label>Data <span style="color:var(--danger);">*</span></label>
+          <input type="date" name="event_date" required>
+        </div>
+        <div class="form-group">
+          <label>Horário <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
+          <input type="time" name="event_time">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Descrição <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
+        <textarea name="description" rows="2" placeholder="Detalhes adicionais..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-success">Criar Evento</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ── Lista ──────────────────────────────────────────────────────────────────── #}
+{% if events %}
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Título</th>
+          <th>Descrição</th>
+          <th>Origem</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ev in events %}
+        <tr>
+          <td style="white-space:nowrap;">
+            {{ ev['event_date'][8:10] }}/{{ ev['event_date'][5:7] }}/{{ ev['event_date'][:4] }}
+            {% if ev['event_time'] %}<br><span style="color:var(--text-muted);font-size:.8125rem;">{{ ev['event_time'][:5] }}</span>{% endif %}
+          </td>
+          <td style="font-weight:600;">{{ ev['title'] }}</td>
+          <td style="color:var(--text-muted);">{{ ev['description'] or '—' }}</td>
+          <td>
+            {% if ev['for_leaders'] %}
+              <span class="badge badge-admin">Líderes</span>
+            {% elif ev['ministry_id'] %}
+              <span class="badge badge-leader">Ministério</span>
+            {% else %}
+              <span class="badge badge-volunteer">Geral</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if ev['ministry_id'] == current_user.ministry_id and not ev['for_leaders'] %}
+            <form method="POST"
+                  action="{{ url_for('leader_delete_event', event_id=ev['id']) }}"
+                  onsubmit="return confirm('Excluir este evento?')">
+              <button class="btn btn-danger-outline btn-sm" type="submit">Excluir</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card"><div class="card-body">
+  <div class="empty-state">
+    <div class="empty-icon"></div>
+    <p class="empty-text">Nenhum evento ainda.<br>Clique em "+ Novo Evento" para adicionar.</p>
+  </div>
+</div></div>
+{% endif %}
+
+<style>.hidden { display: none !important; }</style>
+{% endblock %}

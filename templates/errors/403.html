@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Acesso Negado{% endblock %}
+{% block content %}
+<div class="error-page">
+ <div class="error-code">403</div>
+ <p class="error-message">Você não tem permissão para acessar esta página.</p>
+ <a href="{{ url_for('index') }}" class="btn btn-primary">Voltar ao início</a>
+</div>
+{% endblock %}

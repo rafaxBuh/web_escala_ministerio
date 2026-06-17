@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Acompanhantes de {{ recruta['name'] }} — ZELO{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+ <a href="{{ url_for('leader_dashboard') }}">Painel</a>
+ <span class="breadcrumb-sep">›</span>
+ <a href="{{ url_for('leader_members') }}">Membros</a>
+ <span class="breadcrumb-sep">›</span>
+ <span>Acompanhantes de {{ recruta['name'] }}</span>
+</div>
+
+<div class="page-header">
+ <h1 class="page-title">Acompanhantes do Recruta</h1>
+ <p class="page-subtitle">
+ <span class="badge badge-recruta">Recruta</span>
+ <strong style="margin-left:.5rem;">{{ recruta['name'] }}</strong>
+ — define com quem ele pode ser escalado. Se nenhum acompanhante for definido,
+ poderá servir com qualquer voluntário.
+ </p>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+
+ {# ── Adicionar acompanhante ───────────────────────────────────────────────── #}
+ <div class="card">
+ <div class="card-header">
+ <span class="card-title">Adicionar Acompanhante</span>
+ </div>
+ <div class="card-body">
+ {% if eligible %}
+ <form method="POST" action="{{ url_for('leader_add_companion', user_id=recruta['id']) }}">
+ <div class="form-group">
+ <label>Voluntário acompanhante</label>
+ <select name="companion_id" required>
+ <option value="">— Selecione —</option>
+ {% for m in eligible %}
+ <option value="{{ m['id'] }}">{{ m['name'] }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <button type="submit" class="btn btn-primary">Adicionar</button>
+ </form>
+ {% else %}
+ <p style="color:var(--text-muted);font-size:.875rem;">
+ Todos os voluntários já são acompanhantes deste recruta.
+ </p>
+ {% endif %}
+ </div>
+ </div>
+
+ {# ── Acompanhantes cadastrados ─────────────────────────────────────────────── #}
+ <div class="card">
+ <div class="card-header">
+ <span class="card-title">Acompanhantes ({{ companions|length }})</span>
+ </div>
+ <div class="card-body">
+ {% if companions %}
+ <div style="display:flex;flex-direction:column;gap:.625rem;">
+ {% for c in companions %}
+ <div style="display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);">
+ <div style="flex:1;font-weight:500;font-size:.9375rem;">{{ c['name'] }}</div>
+ <form method="POST"
+ action="{{ url_for('leader_remove_companion', user_id=recruta['id'], entry_id=c['companion_entry_id']) }}"
+ onsubmit="return confirm('Remover {{ c.name }} como acompanhante?')">
+ <button class="btn btn-danger-outline btn-sm" type="submit">Remover</button>
+ </form>
+ </div>
+ {% endfor %}
+ </div>
+ {% else %}
+ <div class="empty-state" style="padding:2rem;">
+ <div class="empty-icon"></div>
+ <p class="empty-text">Nenhum acompanhante definido.<br>
+ Sem restrição — pode servir com qualquer voluntário.</p>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+
+</div>
+
+<div style="margin-top:1.5rem;">
+ <a href="{{ url_for('leader_members') }}" class="btn btn-ghost">← Voltar aos Membros</a>
+</div>
+
+{% endblock %}

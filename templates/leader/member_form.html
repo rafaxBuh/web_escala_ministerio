@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{% if user %}Editar Voluntário{% else %}Novo Voluntário{% endif %} — ZELO{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+ <a href="{{ url_for('leader_dashboard') }}">Painel</a>
+ <span class="breadcrumb-sep">›</span>
+ <a href="{{ url_for('leader_members') }}">Membros</a>
+ <span class="breadcrumb-sep">›</span>
+ <span>{% if user %}{{ user['name'] }}{% else %}Novo Voluntário{% endif %}</span>
+</div>
+
+<div class="page-header">
+ <h1 class="page-title">{% if user %}Editar Voluntário{% else %}Novo Voluntário{% endif %}</h1>
+ {% if not user %}
+ <p class="page-subtitle">O novo membro receberá acesso ao sistema com as credenciais abaixo.</p>
+ {% endif %}
+</div>
+
+<div class="card" style="max-width:480px;">
+ <div class="card-body">
+ <form method="POST">
+
+ <div class="form-group">
+ <label for="name">Nome completo <span style="color:var(--danger);">*</span></label>
+ <input type="text" id="name" name="name" required autofocus
+ value="{{ user['name'] if user else request.form.get('name','') }}">
+ </div>
+
+ <div class="form-group">
+ <label for="email">E-mail <span style="color:var(--danger);">*</span></label>
+ <input type="email" id="email" name="email" required
+ value="{{ user['email'] if user else request.form.get('email','') }}">
+ </div>
+
+ <div class="form-group">
+ <label for="password">
+ Senha
+ {% if user %}
+ <span style="color:var(--text-muted);font-weight:400;">(deixe em branco para manter a atual)</span>
+ {% else %}
+ <span style="color:var(--danger);">*</span>
+ {% endif %}
+ </label>
+ <input type="password" id="password" name="password"
+ {% if not user %}required{% endif %}
+ placeholder="{% if user %}Nova senha (opcional){% else %}Mínimo 6 caracteres{% endif %}">
+ </div>
+
+ {% if user and (user['role'] == 'ministry_leader' or user['role'] == 'general_leader') %}
+ <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem 1rem;margin-bottom:1rem;">
+ <p style="font-size:.8125rem;color:var(--text-muted);">
+ <strong>Perfil:</strong> Líder &nbsp;|&nbsp;
+ <strong>Ministério:</strong> fixado ao seu ministério
+ </p>
+ </div>
+ {% else %}
+ <div class="form-group">
+ <label for="role">Perfil <span style="color:var(--danger);">*</span></label>
+ <select id="role" name="role" required>
+ <option value="volunteer" {% if not user or user['role'] == 'volunteer' %}selected{% endif %}>Voluntário</option>
+ <option value="recruta" {% if user and user['role'] == 'recruta' %}selected{% endif %}>Recruta (em aprendizado)</option>
+ </select>
+ </div>
+ {% endif %}
+
+ <div class="form-actions">
+ <button type="submit" class="btn btn-primary">
+ {% if user %}Salvar Alterações{% else %}Criar Voluntário{% endif %}
+ </button>
+ <a href="{{ url_for('leader_members') }}" class="btn btn-ghost">Cancelar</a>
+ </div>
+
+ </form>
+ </div>
+</div>
+
+{% endblock %}

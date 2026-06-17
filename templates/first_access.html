@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Primeiro Acesso — ZELO</title>
+ <meta name="theme-color" content="#1F1F24">
+ <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+ <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body style="background:var(--bg);">
+
+<div class="login-wrap">
+ <div class="login-card">
+  <h1 class="login-title" style="font-family:'Playfair Display',serif;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;">Zelo</h1>
+  <p class="login-subtitle">Primeiro acesso</p>
+  <p style="font-size:.8125rem;color:var(--text-muted);text-align:center;margin-bottom:1.25rem;">
+   Preencha seus dados. O líder do ministério irá aprovar e você receberá um código por e-mail.
+  </p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+  <div class="alert alert-{{ category }}" style="margin-bottom:1rem;">
+   <span>{{ message }}</span>
+   <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+  </div>
+  {% endfor %}
+  {% endwith %}
+
+  <form method="POST">
+   <div class="form-group">
+    <label for="name">Nome completo <span style="color:var(--text-muted);font-size:.75rem;">(apenas para novos cadastros)</span></label>
+    <input type="text" id="name" name="name" placeholder="Seu nome"
+     value="{{ request.form.get('name', '') }}" autofocus>
+   </div>
+
+   <div class="form-group">
+    <label for="email">E-mail</label>
+    <input type="email" id="email" name="email" placeholder="seu@email.com" required
+     value="{{ request.form.get('email', '') }}">
+   </div>
+
+   <div class="form-group">
+    <label for="ministry_id">Ministério</label>
+    <select id="ministry_id" name="ministry_id" required>
+     <option value="">— Selecione —</option>
+     {% for m in ministries %}
+     <option value="{{ m['id'] }}" {% if request.form.get('ministry_id') == m['id']|string %}selected{% endif %}>
+      {{ m['name'] }}
+     </option>
+     {% endfor %}
+    </select>
+   </div>
+
+   <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem;">
+    Solicitar acesso
+   </button>
+  </form>
+
+  <p style="text-align:center;margin-top:1rem;font-size:.875rem;">
+   <a href="{{ url_for('verify_otp') }}" style="color:var(--text-muted);">Já recebi meu código</a>
+  </p>
+  <p style="text-align:center;margin-top:.5rem;font-size:.875rem;">
+   <a href="{{ url_for('login') }}" style="color:var(--text-muted);">Já tenho senha — fazer login</a>
+  </p>
+ </div>
+</div>
+
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+</body>
+</html>

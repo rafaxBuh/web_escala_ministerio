@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Agenda — ZELO{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+ <h1 class="page-title">Agenda</h1>
+ <p class="page-subtitle">Eventos e seus dias de serviço</p>
+</div>
+
+{# ── Seus eventos (semanas escaladas) ──────────────────────────────────────── #}
+<div class="card" style="margin-bottom:1.5rem;">
+ <div class="card-header">
+  <span class="card-title">Seus Eventos</span>
+  <span style="font-size:.8125rem;color:var(--text-muted);">Nas suas semanas de serviço</span>
+ </div>
+ <div class="card-body" style="padding:0;">
+  {% if my_events %}
+  <div style="display:flex;flex-direction:column;">
+   {% for ev in my_events %}
+   <div style="padding:.875rem 1.25rem;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
+    <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:.25rem;">
+     {{ ev['event_date'][8:10] }}/{{ ev['event_date'][5:7] }}/{{ ev['event_date'][:4] }}{% if ev['event_time'] %} — {{ ev['event_time'][:5] }}{% endif %}
+    </div>
+    <div style="font-weight:600;color:var(--text);overflow-wrap:break-word;">{{ ev['title'] }}</div>
+    {% if ev['description'] %}
+    <div style="font-size:.8125rem;color:var(--text-muted);margin-top:.125rem;">{{ ev['description'] }}</div>
+    {% endif %}
+   </div>
+   {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:1.5rem;">
+   <div class="empty-icon"></div>
+   <p class="empty-text">
+    Nenhum evento nas suas semanas de serviço.<br>
+    <small style="color:var(--text-muted);">Eventos aparecem aqui quando você está escalado.</small>
+   </p>
+  </div>
+  {% endif %}
+ </div>
+</div>
+
+{# ── Avisos do ministério (notify_all) ────────────────────────────────────── #}
+{% if notify_all_events %}
+<div class="card">
+ <div class="card-header">
+  <span class="card-title">Avisos do Ministério</span>
+  <span style="font-size:.8125rem;color:var(--text-muted);">Para todos os membros</span>
+ </div>
+ <div class="card-body" style="padding:0;">
+  <div style="display:flex;flex-direction:column;">
+   {% for ev in notify_all_events %}
+   <div style="padding:.875rem 1.25rem;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
+    <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:.25rem;">
+     {{ ev['event_date'][8:10] }}/{{ ev['event_date'][5:7] }}/{{ ev['event_date'][:4] }}{% if ev['event_time'] %} — {{ ev['event_time'][:5] }}{% endif %}
+    </div>
+    <div style="font-weight:600;color:var(--text);overflow-wrap:break-word;">{{ ev['title'] }}</div>
+    {% if ev['description'] %}
+    <div style="font-size:.8125rem;color:var(--text-muted);margin-top:.125rem;">{{ ev['description'] }}</div>
+    {% endif %}
+   </div>
+   {% endfor %}
+  </div>
+ </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Ministérios — ZELO{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+ <div>
+ <h1 class="page-title">Ministérios</h1>
+ <p class="page-subtitle">{{ ministries|length }} ministério(s) cadastrado(s)</p>
+ </div>
+ <button onclick="document.getElementById('form-new').classList.toggle('hidden')"
+ class="btn btn-primary">+ Novo Ministério</button>
+</div>
+
+{# ── Create form ─────────────────────────────────────────────────────────────── #}
+<div id="form-new" class="card hidden" style="margin-bottom:1.5rem;">
+ <div class="card-header">
+ <span class="card-title">Novo Ministério</span>
+ <button onclick="document.getElementById('form-new').classList.add('hidden')"
+ class="btn btn-ghost btn-sm">Cancelar</button>
+ </div>
+ <div class="card-body">
+ <form method="POST" action="{{ url_for('admin_create_ministry') }}" style="display:flex;gap:.75rem;align-items:flex-end;">
+ <div class="form-group" style="flex:1;margin-bottom:0;">
+ <label>Nome do ministério</label>
+ <input type="text" name="name" placeholder="ex.: Louvor, Recepção..." required>
+ </div>
+ <button type="submit" class="btn btn-success">Criar</button>
+ </form>
+ </div>
+</div>
+
+{# ── List ─────────────────────────────────────────────────────────────────────── #}
+{% if ministries %}
+<div class="card">
+ <div class="table-wrap">
+ <table class="t-ministries">
+ <thead>
+ <tr>
+ <th>Ministério</th>
+ <th>Criado em</th>
+ <th></th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for m in ministries %}
+ <tr>
+ <td>
+ <a href="{{ url_for('admin_ministry_detail', ministry_id=m['id']) }}"
+ style="font-weight:600;">{{ m['name'] }}</a>
+ </td>
+ <td style="color:var(--text-muted);">{{ m['created_at'][:10] if m['created_at'] else '—' }}</td>
+ <td>
+ <div class="td-actions">
+ <a href="{{ url_for('admin_ministry_detail', ministry_id=m['id']) }}"
+ class="btn btn-ghost btn-sm">Ver</a>
+ <form method="POST" action="{{ url_for('admin_delete_ministry', ministry_id=m['id']) }}"
+ onsubmit="return confirm('Excluir ministério {{ m['name'] }}? Todos os dados serão removidos.')">
+ <button class="btn btn-danger-outline btn-sm" type="submit">Excluir</button>
+ </form>
+ </div>
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+</div>
+{% else %}
+<div class="card"><div class="card-body">
+ <div class="empty-state">
+ <div class="empty-icon"></div>
+ <p class="empty-text">Nenhum ministério cadastrado ainda.</p>
+ </div>
+</div></div>
+{% endif %}
+
+<style>.hidden { display: none !important; }</style>
+{% endblock %}

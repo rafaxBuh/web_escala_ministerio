@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Solicitações — ZELO{% endblock %}
+
+{% block content %}
+<div class="page-header">
+ <h1 class="page-title">Solicitações</h1>
+ <p class="page-subtitle">Novos cadastros e pedidos de acesso ao ministério</p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }}" style="margin-bottom:1rem;">
+ <span>{{ message }}</span>
+ <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+</div>
+{% endfor %}
+{% endwith %}
+
+{# ── Novos cadastros ─────────────────────────────────────────────────────── #}
+<div class="card" style="margin-bottom:1.25rem;">
+ <div class="card-header">
+  <span class="card-title">Novos cadastros</span>
+  {% if registrations %}<span class="badge badge-volunteer">{{ registrations|length }}</span>{% endif %}
+ </div>
+ <div class="card-body">
+  {% if registrations %}
+  <div style="display:flex;flex-direction:column;gap:.75rem;">
+   {% for r in registrations %}
+   <div style="display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--bg);border-radius:var(--radius);flex-wrap:wrap;">
+    <div style="flex:1;min-width:0;">
+     <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.name }}</div>
+     <div style="font-size:.8125rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.email }}</div>
+     <div style="font-size:.75rem;color:var(--text-muted);margin-top:.125rem;">{{ r.created_at[:16].replace('T',' ') if r.created_at else '' }}</div>
+    </div>
+    <div style="display:flex;gap:.5rem;flex-shrink:0;">
+     <form method="POST" action="{{ url_for('leader_approve_registration', reg_id=r.id) }}"
+           onsubmit="return confirm('Aprovar cadastro de ' + '{{ r.name }}' + '?')">
+      <button class="btn btn-success btn-sm" type="submit">Aprovar</button>
+     </form>
+     <form method="POST" action="{{ url_for('leader_reject_registration', reg_id=r.id) }}"
+           onsubmit="return confirm('Recusar cadastro de ' + '{{ r.name }}' + '?')">
+      <button class="btn btn-danger btn-sm" type="submit">Recusar</button>
+     </form>
+    </div>
+   </div>
+   {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:2rem;">
+   <div class="empty-icon"></div>
+   <p class="empty-text">Nenhum cadastro pendente.</p>
+  </div>
+  {% endif %}
+ </div>
+</div>
+
+{# ── Pedidos de acesso (usuários já cadastrados) ──────────────────────────── #}
+<div class="card">
+ <div class="card-header">
+  <span class="card-title">Pedidos de acesso</span>
+  {% if requests %}<span class="badge badge-volunteer">{{ requests|length }}</span>{% endif %}
+ </div>
+ <div class="card-body">
+  {% if requests %}
+  <div style="display:flex;flex-direction:column;gap:.75rem;">
+   {% for r in requests %}
+   <div style="display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--bg);border-radius:var(--radius);flex-wrap:wrap;">
+    <div style="flex:1;min-width:0;">
+     <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.name }}</div>
+     <div style="font-size:.8125rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.email }}</div>
+     <div style="font-size:.75rem;color:var(--text-muted);margin-top:.125rem;">{{ r.created_at[:16].replace('T',' ') if r.created_at else '' }}</div>
+    </div>
+    <div style="display:flex;gap:.5rem;flex-shrink:0;">
+     <form method="POST" action="{{ url_for('leader_approve_request', request_id=r.id) }}"
+           onsubmit="return confirm('Aprovar acesso de ' + '{{ r.name }}' + '?')">
+      <button class="btn btn-success btn-sm" type="submit">Aprovar</button>
+     </form>
+     <form method="POST" action="{{ url_for('leader_reject_request', request_id=r.id) }}"
+           onsubmit="return confirm('Recusar acesso de ' + '{{ r.name }}' + '?')">
+      <button class="btn btn-danger btn-sm" type="submit">Recusar</button>
+     </form>
+    </div>
+   </div>
+   {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:2rem;">
+   <div class="empty-icon"></div>
+   <p class="empty-text">Nenhum pedido de acesso pendente.</p>
+  </div>
+  {% endif %}
+ </div>
+</div>
+{% endblock %}

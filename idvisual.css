@@ -1,0 +1,32 @@
+/* Definição de Cores */
+:root {
+  --zelo-primary: #20E1C9; /* Turquesa */
+  --zelo-secondary: #8D76F7; /* Lavanda */
+  --zelo-bg: #FFFFFF;
+  --zelo-text-dark: #1F1F24;
+  --zelo-text-grey: #A6AAB4;
+  --zelo-radius: 12px;
+}
+
+/* Estilo Base da UI */
+body {
+  font-family: 'Inter', sans-serif; /* Importe do Google Fonts */
+  background-color: var(--zelo-bg);
+  color: var(--zelo-text-dark);
+}
+
+/* Exemplo de Card de Escala (Mobills Style) */
+.card-escala {
+  background: white;
+  border-radius: var(--zelo-radius);
+  padding: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Sombra sutil */
+  border: 1px solid #F0F0F0; /* Borda bem clarinha */
+}
+
+.button-confirmar {
+  background-color: var(--zelo-primary);
+  color: #1F1F24; /* Texto escuro sobre o turquesa fica mais moderno */
+  border-radius: var(--zelo-radius);
+  font-weight: 500;
+}

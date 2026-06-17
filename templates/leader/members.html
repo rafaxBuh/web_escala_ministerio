@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Membros — ZELO{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+ <a href="{{ url_for('leader_dashboard') }}">Painel</a>
+ <span class="breadcrumb-sep">›</span>
+ <span>Membros</span>
+</div>
+
+<div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+ <div>
+ <h1 class="page-title">Membros do Ministério</h1>
+ <p class="page-subtitle">{{ members|length }} membro(s) cadastrado(s)</p>
+ </div>
+ <a href="{{ url_for('leader_create_member') }}" class="btn btn-primary">+ Novo Voluntário</a>
+</div>
+
+{% if members %}
+<div class="card">
+ <div style="display:flex;flex-direction:column;">
+ {% for m in members %}
+ <div style="padding:.875rem 1.25rem;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
+
+  {# Linha 1: nome + badge #}
+  <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;min-width:0;">
+   <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;">{{ m['name'] }}</span>
+   <span class="badge {% if m['role'] == 'ministry_leader' %}badge-leader{% elif m['role'] == 'recruta' %}badge-recruta{% else %}badge-volunteer{% endif %}" style="font-size:.7rem;flex-shrink:0;">{%- if m['role'] == 'ministry_leader' %}Líder{% elif m['role'] == 'recruta' %}Recruta{% else %}Voluntário{% endif -%}</span>
+  </div>
+
+  {# Linha 2: botões #}
+  <div style="display:flex;flex-wrap:wrap;gap:.375rem;">
+   <a href="{{ url_for('leader_edit_member', user_id=m['id']) }}" class="btn btn-ghost btn-sm">Editar</a>
+
+   {% if m['role'] == 'volunteer' %}
+   <form method="POST" action="{{ url_for('leader_mark_recruta', user_id=m['id']) }}"
+    onsubmit="return confirm('Marcar {{ m.name }} como recruta?')">
+    <button class="btn btn-warning btn-sm" type="submit">Recrutar</button>
+   </form>
+   {% elif m['role'] == 'recruta' %}
+   <a href="{{ url_for('leader_recruta_companions', user_id=m['id']) }}" class="btn btn-ghost btn-sm">Acomp.</a>
+   <form method="POST" action="{{ url_for('leader_promote_recruta', user_id=m['id']) }}"
+    onsubmit="return confirm('Promover {{ m.name }} a voluntário?')">
+    <button class="btn btn-primary btn-sm" type="submit">Promover</button>
+   </form>
+   {% endif %}
+
+   {% if m['id'] != current_user.id %}
+   <form method="POST" action="{{ url_for('leader_remove_member', user_id=m['id']) }}"
+    onsubmit="return confirm('Remover {{ m.name }} do ministério?')">
+    <button class="btn btn-danger-outline btn-sm" type="submit">Remover</button>
+   </form>
+   {% endif %}
+  </div>
+
+ </div>
+ {% endfor %}
+ </div>
+</div>
+{% else %}
+<div class="card"><div class="card-body">
+ <div class="empty-state">
+ <div class="empty-icon"></div>
+ <p class="empty-text">Nenhum membro cadastrado ainda.<br>
+ Clique em "Novo Voluntário" para adicionar.</p>
+ </div>
+</div></div>
+{% endif %}
+
+{% endblock %}

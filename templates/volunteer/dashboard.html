@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Início — ZELO{% endblock %}
+
+{% block content %}
+<div class="page-header">
+ <h1 class="page-title">
+ {% if ministry %}{{ ministry['name'] }}{% else %}Meu Ministério{% endif %}
+ </h1>
+ <p class="page-subtitle">Bem-vindo(a), {{ current_user.name }}!</p>
+</div>
+
+{% if not ministry %}
+ <div class="card">
+ <div class="card-body">
+ <div class="empty-state">
+ <div class="empty-icon"></div>
+ <p class="empty-text">Você ainda não está associado(a) a nenhum ministério.<br>
+ Aguarde o administrador te adicionar a um ministério.</p>
+ </div>
+ </div>
+ </div>
+
+{% else %}
+
+ {# ── Open period: availability form ───────────────────────────────────────── #}
+ {% if open_period %}
+ <div class="card" style="margin-bottom:1.5rem;">
+ <div class="card-header">
+ <div>
+ <span class="card-title"> Período Aberto</span>
+ <span class="badge badge-open" style="margin-left:.5rem;">
+ {{ period_label(open_period) }}
+ </span>
+ </div>
+ </div>
+ <div class="card-body">
+ <p style="color:var(--text-muted); font-size:.875rem; margin-bottom:1.25rem;">
+ Marque as semanas em que você <strong>estará disponível</strong> para servir neste período.
+ </p>
+
+ <form method="POST" action="{{ url_for('save_availability') }}">
+ <input type="hidden" name="period_id" value="{{ open_period['id'] }}">
+
+ {% set week_dates = get_week_dates(open_period['year'], open_period['month'], open_period['end_year'], open_period['end_month']) %}
+ <div class="checkbox-grid">
+ {% for wk in week_dates %}
+ <label class="checkbox-card {% if availability.get(wk.week) %}checked{% endif %}">
+ <input
+ type="checkbox"
+ name="week_{{ wk.week }}"
+ {% if availability.get(wk.week) %}checked{% endif %}
+ onchange="this.closest('.checkbox-card').classList.toggle('checked', this.checked)"
+ >
+ <span class="checkbox-label">{{ wk.label }}</span>
+ </label>
+ {% endfor %}
+ </div>
+
+ <div class="form-actions">
+ <button type="submit" class="btn btn-primary">Salvar Disponibilidade</button>
+ </div>
+ </form>
+ </div>
+ </div>
+ {% else %}
+ <div class="card" style="margin-bottom:1.5rem; border-color: var(--border);">
+ <div class="card-body">
+ <div class="empty-state" style="padding:1.5rem;">
+ <div class="empty-icon"></div>
+ <p class="empty-text">Nenhum período aberto no momento.<br>
+ Aguarde o líder do ministério abrir o próximo período.</p>
+ </div>
+ </div>
+ </div>
+ {% endif %}
+
+ {# ── Teaser próximo evento ─────────────────────────────────────────────────── #}
+ {% if next_event %}
+ <div class="card" style="margin-bottom:1.5rem;">
+ <div class="card-header">
+ <span class="card-title"> Próximo Evento</span>
+ <a href="{{ url_for('volunteer_agenda') }}" class="btn btn-ghost btn-sm">Ver agenda</a>
+ </div>
+ <div class="card-body">
+ <p style="font-weight:600;margin:0;">{{ next_event['title'] }}</p>
+ <p style="color:var(--text-muted);font-size:.875rem;margin:.25rem 0 0;">
+ {{ next_event['event_date'][8:10] }}/{{ next_event['event_date'][5:7] }}/{{ next_event['event_date'][:4] }}
+ {% if next_event['description'] %} — {{ next_event['description'] }}{% endif %}
+ </p>
+ </div>
+ </div>
+ {% endif %}
+
+ {# ── Most recent confirmed schedule ───────────────────────────────────────── #}
+ {% if confirmed_schedule %}
+ <div class="card">
+ <div class="card-header">
+ <div>
+ <span class="card-title"> Escala Confirmada</span>
+ <span class="badge badge-confirmed" style="margin-left:.5rem;">
+ {{ period_label(confirmed_period) }}
+ </span>
+ </div>
+ </div>
+ <div class="card-body" style="padding:0;">
+  {% set week_dates = get_week_dates(confirmed_period['year'], confirmed_period['month'], confirmed_period['end_year'], confirmed_period['end_month']) %}
+  <div style="display:flex;flex-direction:column;">
+   {% for row in confirmed_schedule %}
+   <div style="padding:.875rem 1.25rem;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
+    <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:.375rem;">
+     Semana {{ row['week'] }} — {{ week_dates[row['week'] - 1].label }}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.25rem;">
+     <div class="member-name">{{ row['member1'] }}</div>
+     <div class="member-name">{{ row['member2'] }}</div>
+    </div>
+   </div>
+   {% endfor %}
+  </div>
+ </div>
+ </div>
+ {% endif %}
+
+{% endif %}
+{% endblock %}

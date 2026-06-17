@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}{{ ministry['name'] }} — ZELO{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+ <a href="{{ url_for('admin_ministries') }}">Ministérios</a>
+ <span class="breadcrumb-sep">›</span>
+ <span>{{ ministry['name'] }}</span>
+</div>
+
+<div class="page-header">
+ <h1 class="page-title">{{ ministry['name'] }}</h1>
+ <p class="page-subtitle">Membros e histórico de períodos</p>
+</div>
+
+<div class="grid-2" style="align-items:start;">
+
+ {# ── Members ────────────────────────────────────────────────────────────── #}
+ <div class="card">
+ <div class="card-header">
+ <span class="card-title"> Membros ({{ members|length }})</span>
+ <a href="{{ url_for('admin_create_user') }}?ministry={{ ministry['id'] }}"
+ class="btn btn-primary btn-sm">+ Adicionar</a>
+ </div>
+ <div class="card-body">
+ {% if members %}
+ <div style="display:flex;flex-direction:column;gap:.5rem;">
+ {% for m in members %}
+ <div style="display:flex;align-items:center;gap:.625rem;padding:.625rem;background:var(--bg);border-radius:var(--radius);">
+ <div style="flex:1;">
+ <span style="font-weight:600;">{{ m['name'] }}</span><br>
+ <span style="font-size:.8125rem;color:var(--text-muted);">{{ m['email'] }}</span>
+ </div>
+ <span class="badge {% if m['role'] == 'ministry_leader' %}badge-leader{% elif m['role'] == 'general_leader' %}badge-admin{% elif m['role'] == 'recruta' %}badge-recruta{% else %}badge-volunteer{% endif %}">
+ {%- if m['role'] == 'ministry_leader' %}Líder{% elif m['role'] == 'general_leader' %}Admin{% elif m['role'] == 'recruta' %}Recruta{% else %}Voluntário{% endif -%}
+ </span>
+ <a href="{{ url_for('admin_edit_user', user_id=m['id']) }}"
+ class="btn btn-ghost btn-sm">Editar</a>
+ </div>
+ {% endfor %}
+ </div>
+ {% else %}
+ <div class="empty-state" style="padding:2rem;">
+ <div class="empty-icon"></div>
+ <p class="empty-text">Nenhum membro neste ministério.</p>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+
+ {# ── Periods ─────────────────────────────────────────────────────────────── #}
+ <div class="card">
+ <div class="card-header">
+ <span class="card-title"> Períodos ({{ periods|length }})</span>
+ </div>
+ <div class="card-body">
+ {% if periods %}
+ <div class="period-list">
+ {% for p in periods %}
+ <div class="period-row">
+ <span class="period-label">{{ period_label(p) }}</span>
+ <span class="badge {% if p['status'] == 'open' %}badge-open{% elif p['status'] == 'closed' %}badge-closed{% else %}badge-confirmed{% endif %}">
+ {%- if p['status'] == 'open' %}Aberto{% elif p['status'] == 'closed' %}Aguardando{% else %}Confirmado{% endif -%}
+ </span>
+ {% if p['status'] in ('closed','confirmed') %}
+ <a href="{{ url_for('view_schedule', period_id=p['id']) }}"
+ class="btn btn-ghost btn-sm">Ver</a>
+ {% endif %}
+ </div>
+ {% endfor %}
+ </div>
+ {% else %}
+ <div class="empty-state" style="padding:2rem;">
+ <div class="empty-icon"></div>
+ <p class="empty-text">Nenhum período ainda.</p>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+
+</div>
+{% endblock %}

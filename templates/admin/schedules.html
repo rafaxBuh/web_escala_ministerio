@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Escalas — ZELO{% endblock %}
+
+{% block content %}
+<div class="page-header">
+ <h1 class="page-title">Todas as Escalas</h1>
+ <p class="page-subtitle">{{ periods|length }} período(s) em todos os ministérios</p>
+</div>
+
+{% if periods %}
+<div class="card">
+ <div class="table-wrap">
+ <table class="t-schedules">
+ <thead>
+ <tr>
+ <th>Ministério</th>
+ <th>Período</th>
+ <th>Status</th>
+ <th></th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for p in periods %}
+ <tr>
+ <td>
+ <a href="{{ url_for('admin_ministry_detail', ministry_id=p['ministry_id']) }}"
+ style="font-weight:600;">{{ p['ministry_name'] }}</a>
+ </td>
+ <td>{{ period_label(p) }}</td>
+ <td>
+ <span class="badge {% if p['status'] == 'open' %}badge-open{% elif p['status'] == 'closed' %}badge-closed{% else %}badge-confirmed{% endif %}">
+ {%- if p['status'] == 'open' %}Aberto{% elif p['status'] == 'closed' %}Aguardando confirmação{% else %}Confirmado{% endif -%}
+ </span>
+ </td>
+ <td>
+ {% if p['status'] in ('closed', 'confirmed') %}
+ <a href="{{ url_for('view_schedule', period_id=p['id']) }}"
+ class="btn btn-ghost btn-sm">Ver Escala</a>
+ {% else %}
+ <span style="color:var(--text-muted);font-size:.8125rem;">Aguardando voluntários</span>
+ {% endif %}
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+</div>
+{% else %}
+<div class="card"><div class="card-body">
+ <div class="empty-state">
+ <div class="empty-icon"></div>
+ <p class="empty-text">Nenhum período encontrado.<br>
+ Os líderes de ministério precisam abrir os primeiros períodos.</p>
+ </div>
+</div></div>
+{% endif %}
+{% endblock %}

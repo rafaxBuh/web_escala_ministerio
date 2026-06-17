@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ZELO{% endblock %}</title>
+  <meta name="theme-color" content="#1F1F24">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ZELO">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="{{ url_for('index') }}" class="nav-brand logo-brand">Zelo</a>
+
+    {% if current_user.is_authenticated %}
+    <nav class="nav-links">
+      {% if current_user.role == 'general_leader' %}
+        <a href="{{ url_for('admin_dashboard') }}" class="nav-link">Painel</a>
+        <a href="{{ url_for('admin_ministries') }}" class="nav-link">Ministérios</a>
+        <a href="{{ url_for('admin_users') }}" class="nav-link">Usuários</a>
+        <a href="{{ url_for('admin_schedules') }}" class="nav-link">Escalas</a>
+        <a href="{{ url_for('admin_events') }}" class="nav-link">Eventos</a>
+      {% elif current_user.role == 'ministry_leader' %}
+        <a href="{{ url_for('leader_dashboard') }}" class="nav-link">Painel</a>
+        <a href="{{ url_for('leader_members') }}" class="nav-link">Membros</a>
+        <a href="{{ url_for('leader_join_requests') }}" class="nav-link" style="position:relative;">Solicitações{% if pending_requests > 0 %} <span style="display:inline-flex;align-items:center;justify-content:center;background:#ef4444;color:#fff;font-size:.65rem;font-weight:700;border-radius:9999px;min-width:1.1em;height:1.1em;padding:0 .25em;vertical-align:middle;">{{ pending_requests }}</span>{% endif %}</a>
+        <a href="{{ url_for('list_restrictions') }}" class="nav-link">Restrições</a>
+        <a href="{{ url_for('leader_events') }}" class="nav-link">Eventos</a>
+        <a href="{{ url_for('volunteer_agenda') }}" class="nav-link">Agenda</a>
+      {% else %}
+        <a href="{{ url_for('volunteer_dashboard') }}" class="nav-link">Início</a>
+        <a href="{{ url_for('volunteer_agenda') }}" class="nav-link">Agenda</a>
+      {% endif %}
+    </nav>
+
+    <div class="nav-user">
+      <span class="user-name">{{ current_user.name.split()[0] }}</span>
+      <span class="badge {% if current_user.role == 'general_leader' %}badge-admin{% elif current_user.role == 'ministry_leader' %}badge-leader{% elif current_user.role == 'recruta' %}badge-recruta{% else %}badge-volunteer{% endif %}">
+        {%- if current_user.role == 'general_leader' %}Admin{% elif current_user.role == 'ministry_leader' %}Líder{% elif current_user.role == 'recruta' %}Recruta{% else %}Voluntário{% endif -%}
+      </span>
+      <a href="{{ url_for('logout') }}" class="btn btn-sm btn-ghost">Sair</a>
+    </div>
+
+    <button class="nav-hamburger" id="nav-hamburger"
+            onclick="toggleMenu()"
+            aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    {% endif %}
+  </div>
+
+  {% if current_user.is_authenticated %}
+  <div class="nav-overlay" id="nav-overlay" onclick="toggleMenu()"></div>
+  <div class="nav-mobile" id="nav-mobile">
+    {% if current_user.role == 'general_leader' %}
+      <a href="{{ url_for('admin_dashboard') }}" class="nav-mobile-link">Painel</a>
+      <a href="{{ url_for('admin_ministries') }}" class="nav-mobile-link">Ministérios</a>
+      <a href="{{ url_for('admin_users') }}" class="nav-mobile-link">Usuários</a>
+      <a href="{{ url_for('admin_schedules') }}" class="nav-mobile-link">Escalas</a>
+      <a href="{{ url_for('admin_events') }}" class="nav-mobile-link">Eventos</a>
+    {% elif current_user.role == 'ministry_leader' %}
+      <a href="{{ url_for('leader_dashboard') }}" class="nav-mobile-link">Painel</a>
+      <a href="{{ url_for('leader_members') }}" class="nav-mobile-link">Membros</a>
+      <a href="{{ url_for('leader_join_requests') }}" class="nav-mobile-link">Solicitações{% if pending_requests > 0 %} ({{ pending_requests }}){% endif %}</a>
+      <a href="{{ url_for('list_restrictions') }}" class="nav-mobile-link">Restrições</a>
+      <a href="{{ url_for('leader_events') }}" class="nav-mobile-link">Eventos</a>
+      <a href="{{ url_for('volunteer_agenda') }}" class="nav-mobile-link">Agenda</a>
+    {% else %}
+      <a href="{{ url_for('volunteer_dashboard') }}" class="nav-mobile-link">Início</a>
+      <a href="{{ url_for('volunteer_agenda') }}" class="nav-mobile-link">Agenda</a>
+    {% endif %}
+    <div class="nav-mobile-footer">
+      <div>
+        <span class="user-name">{{ current_user.name }}</span>
+        <span class="badge {% if current_user.role == 'general_leader' %}badge-admin{% elif current_user.role == 'ministry_leader' %}badge-leader{% elif current_user.role == 'recruta' %}badge-recruta{% else %}badge-volunteer{% endif %}" style="margin-left:.5rem;">
+          {%- if current_user.role == 'general_leader' %}Admin{% elif current_user.role == 'ministry_leader' %}Líder{% elif current_user.role == 'recruta' %}Recruta{% else %}Voluntário{% endif -%}
+        </span>
+      </div>
+      <a href="{{ url_for('logout') }}" class="btn btn-sm btn-ghost">Sair</a>
+    </div>
+  </div>
+  {% endif %}
+</header>
+
+<main class="main">
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">
+        <span>{{ message }}</span>
+        <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+      </div>
+      {% endfor %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<footer class="footer">
+  <p style="font-family:'Playfair Display',serif;letter-spacing:.1em;">ZELO</p>
+</footer>
+
+<script>
+// ── Service Worker + Push ─────────────────────────────────────────────────────
+function urlB64ToUint8(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const raw = atob((b64 + pad).replace(/-/g,'+').replace(/_/g,'/'));
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function subscribePush(reg) {
+  const vapidKey = '{{ vapid_public_key }}';
+  if (!vapidKey || !('PushManager' in window)) return;
+  try {
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) return;
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlB64ToUint8(vapidKey),
+    });
+    await fetch('/push/subscribe', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(sub),
+    });
+  } catch(e) { console.warn('[push]', e); }
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    {% if current_user.is_authenticated %}
+    subscribePush(reg);
+    {% endif %}
+  });
+}
+
+function toggleMenu() {
+  var btn     = document.getElementById('nav-hamburger');
+  var drawer  = document.getElementById('nav-mobile');
+  var overlay = document.getElementById('nav-overlay');
+  if (!btn || !drawer) return;
+  var open = drawer.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  if (overlay) overlay.classList.toggle('open', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{% if user %}Editar Usuário{% else %}Novo Usuário{% endif %} — ZELO{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+ <a href="{{ url_for('admin_users') }}">Usuários</a>
+ <span class="breadcrumb-sep">›</span>
+ <span>{% if user %}Editar: {{ user['name'] }}{% else %}Novo Usuário{% endif %}</span>
+</div>
+
+<div class="page-header">
+ <h1 class="page-title">{% if user %}Editar Usuário{% else %}Novo Usuário{% endif %}</h1>
+</div>
+
+<div class="card" style="max-width:560px;">
+ <div class="card-body">
+ <form method="POST">
+ <div class="form-group">
+ <label for="name">Nome completo <span style="color:var(--danger);">*</span></label>
+ <input type="text" id="name" name="name" required
+ value="{{ user['name'] if user else request.form.get('name','') }}">
+ </div>
+
+ <div class="form-group">
+ <label for="email">E-mail <span style="color:var(--danger);">*</span></label>
+ <input type="email" id="email" name="email" required
+ value="{{ user['email'] if user else request.form.get('email','') }}">
+ </div>
+
+ <div class="form-group">
+ <label for="password">
+ Senha {% if user %}<span style="color:var(--text-muted);font-weight:400;">(deixe em branco para não alterar)</span>{% else %}<span style="color:var(--danger);">*</span>{% endif %}
+ </label>
+ <input type="password" id="password" name="password"
+ {% if not user %}required{% endif %}
+ placeholder="{% if user %}Nova senha (opcional){% else %}Mínimo 6 caracteres{% endif %}">
+ </div>
+
+ <div class="form-row">
+ <div class="form-group">
+ <label for="role">Perfil <span style="color:var(--danger);">*</span></label>
+ <select id="role" name="role" required>
+ <option value="volunteer" {% if (user and user['role']=='volunteer') or request.form.get('role')=='volunteer' %}selected{% endif %}>Voluntário</option>
+ <option value="recruta" {% if (user and user['role']=='recruta') or request.form.get('role')=='recruta' %}selected{% endif %}>Recruta</option>
+ <option value="ministry_leader" {% if (user and user['role']=='ministry_leader') or request.form.get('role')=='ministry_leader' %}selected{% endif %}>Líder de Ministério</option>
+ <option value="general_leader" {% if (user and user['role']=='general_leader') or request.form.get('role')=='general_leader' %}selected{% endif %}>Administrador Geral</option>
+ </select>
+ </div>
+
+ <div class="form-group">
+ <label for="ministry_id">Ministério</label>
+ <select id="ministry_id" name="ministry_id">
+ <option value="">— Nenhum —</option>
+ {% for m in ministries %}
+ <option value="{{ m['id'] }}"
+ {% if (user and user['ministry_id']==m['id']) or request.args.get('ministry')==m['id']|string or request.form.get('ministry_id')==m['id']|string %}selected{% endif %}>
+ {{ m['name'] }}
+ </option>
+ {% endfor %}
+ </select>
+ </div>
+ </div>
+
+ <div class="form-actions">
+ <button type="submit" class="btn btn-primary">
+ {% if user %}Salvar Alterações{% else %}Criar Usuário{% endif %}
+ </button>
+ <a href="{{ url_for('admin_users') }}" class="btn btn-ghost">Cancelar</a>
+ </div>
+ </form>
+ </div>
+</div>
+
+{% endblock %}

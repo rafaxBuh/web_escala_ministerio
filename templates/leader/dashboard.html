@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Painel do Líder — ZELO{% endblock %}
+
+{% block content %}
+<div class="page-header">
+ <h1 class="page-title">
+ {% if ministry %}{{ ministry['name'] }}{% else %}Painel do Líder{% endif %}
+ </h1>
+ <p class="page-subtitle">Gerenciamento de escalas do ministério</p>
+</div>
+
+{% if not ministry %}
+ <div class="card"><div class="card-body">
+ <div class="empty-state">
+ <div class="empty-icon"></div>
+ <p class="empty-text">Você não está associado a nenhum ministério.<br>
+ Peça ao administrador para te vincular a um ministério.</p>
+ </div>
+ </div></div>
+
+{% else %}
+
+ {# ── Stats ──────────────────────────────────────────────────────────────── #}
+ <div class="stats-grid" style="margin-bottom:1.5rem;">
+ <div class="stat-card">
+ <div class="stat-value">{{ members|length }}</div>
+ <div class="stat-label">Membros</div>
+ </div>
+ <div class="stat-card">
+ <div class="stat-value">{{ periods|length }}</div>
+ <div class="stat-label">Períodos</div>
+ </div>
+ <div class="stat-card">
+ <div class="stat-value">
+ {{ periods|selectattr('status','eq','confirmed')|list|length }}
+ </div>
+ <div class="stat-label">Confirmados</div>
+ </div>
+ </div>
+
+ <div class="grid-2" style="gap:1.5rem; align-items:start;">
+
+ {# ── Left column: periods ─────────────────────────────────────────────── #}
+ <div>
+ <div class="card">
+ <div class="card-header">
+ <span class="card-title"> Períodos</span>
+ {% if not open_period %}
+ <button id="btn-new-period"
+ onclick="document.getElementById('form-open').style.display='block'; this.style.display='none';"
+ class="btn btn-primary btn-sm"
+ >+ Novo Período</button>
+ {% endif %}
+ </div>
+
+ {# Open new period form #}
+ <div id="form-open" style="display:none; padding:1rem 1.25rem; border-bottom:1px solid var(--border); background:var(--bg);">
+ <form method="POST" action="{{ url_for('open_period') }}">
+ <p style="font-size:.875rem;font-weight:600;margin-bottom:.875rem;color:var(--text);">Novo período:</p>
+
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:.625rem;margin-bottom:.625rem;">
+ <div>
+ <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Início — Mês</label>
+ <select name="month" style="margin-top:.25rem;">
+ {% for n, nome in MONTHS.items() %}
+ <option value="{{ n }}" {% if n == today.month %}selected{% endif %}>{{ nome }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <div>
+ <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Início — Ano</label>
+ <input type="number" name="year" value="{{ today.year }}" min="2024" max="2035" style="margin-top:.25rem;">
+ </div>
+ <div>
+ <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Fim — Mês</label>
+ <select name="end_month" style="margin-top:.25rem;">
+ {% for n, nome in MONTHS.items() %}
+ <option value="{{ n }}" {% if n == today.month %}selected{% endif %}>{{ nome }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <div>
+ <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Fim — Ano</label>
+ <input type="number" name="end_year" value="{{ today.year }}" min="2024" max="2035" style="margin-top:.25rem;">
+ </div>
+ </div>
+
+ <p style="font-size:.75rem;color:var(--text-muted);margin-bottom:.75rem;">
+ Para um único mês, deixe início e fim iguais.
+ </p>
+
+ <div style="display:flex;gap:.5rem;">
+ <button type="submit" class="btn btn-success btn-sm">Abrir Período</button>
+ <button type="button" class="btn btn-ghost btn-sm"
+ onclick="document.getElementById('form-open').style.display='none';
+ document.getElementById('btn-new-period').style.display='';">
+ Cancelar
+ </button>
+ </div>
+ </form>
+ </div>
+
+ <div class="card-body">
+ {% if periods %}
+ <div class="period-list">
+ {% for p in periods %}
+ <div class="period-row">
+ <div class="period-label">{{ period_label(p) }}</div>
+ <span class="badge {% if p['status'] == 'open' %}badge-open{% elif p['status'] == 'closed' %}badge-closed{% else %}badge-confirmed{% endif %}">
+ {%- if p['status'] == 'open' %}Aberto{% elif p['status'] == 'closed' %}Aguardando confirmação{% else %}Confirmado{% endif -%}
+ </span>
+ <div class="period-actions">
+ {% if p['status'] == 'open' %}
+ <form method="POST" action="{{ url_for('close_period', period_id=p['id']) }}"
+ onsubmit="return confirm('Fechar período e gerar escala?')">
+ <button class="btn btn-warning btn-sm" type="submit">Gerar Escala</button>
+ </form>
+ {% elif p['status'] in ('closed','confirmed') %}
+ <a href="{{ url_for('view_schedule', period_id=p['id']) }}"
+ class="btn btn-outline btn-sm">Ver Escala</a>
+ {% endif %}
+ </div>
+ </div>
+ {% endfor %}
+ </div>
+ {% else %}
+ <div class="empty-state" style="padding:2rem;">
+ <div class="empty-icon"></div>
+ <p class="empty-text">Nenhum período ainda. Crie o primeiro!</p>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+
+ {# ── Right column: availability summary + members ────────────────────── #}
+ <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+ {% if open_period %}
+ {# ── Minha disponibilidade (líder) ─────────────────────────────────────── #}
+ <div class="card">
+ <div class="card-header">
+ <span class="card-title"> Minha Disponibilidade</span>
+ <span class="badge badge-open" style="font-size:.75rem;">{{ period_label(open_period) }}</span>
+ </div>
+ <div class="card-body">
+ <form method="POST" action="{{ url_for('save_availability') }}">
+ <input type="hidden" name="period_id" value="{{ open_period['id'] }}">
+ {% set week_dates = get_week_dates(open_period['year'], open_period['month'], open_period['end_year'], open_period['end_month']) %}
+ <div class="checkbox-grid">
+ {% for wk in week_dates %}
+ <label class="checkbox-card {% if leader_availability.get(wk.week) %}checked{% endif %}">
+ <input type="checkbox" name="week_{{ wk.week }}"
+ {% if leader_availability.get(wk.week) %}checked{% endif %}
+ onchange="this.closest('.checkbox-card').classList.toggle('checked', this.checked)">
+ <span class="checkbox-label">{{ wk.label }}</span>
+ </label>
+ {% endfor %}
+ </div>
+ <div class="form-actions" style="margin-top:.75rem;">
+ <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+ </div>
+ </form>
+ </div>
+ </div>
+
+ {# ── Disponibilidade dos voluntários ────────────────────────────────────── #}
+ <div class="card">
+ <div class="card-header">
+ <span class="card-title"> Disponibilidade — {{ period_label(open_period) }}</span>
+ </div>
+ <div class="card-body">
+ {% if availability_summary %}
+ {% set week_dates = get_week_dates(open_period['year'], open_period['month'], open_period['end_year'], open_period['end_month']) %}
+ <div class="avail-summary">
+ {% for wk in week_dates %}
+ <div class="avail-week">
+ <div class="avail-week-title">{{ wk.label }}</div>
+ <div class="avail-names">
+ {% if availability_summary.get(wk.week) %}
+ {% for name in availability_summary[wk.week] %}
+ <span class="avail-name">{{ name }}</span>
+ {% endfor %}
+ {% else %}
+ <span class="avail-empty">Sem respostas</span>
+ {% endif %}
+ </div>
+ </div>
+ {% endfor %}
+ </div>
+ {% else %}
+ <p style="color:var(--text-muted);font-size:.875rem;">
+ Nenhum voluntário marcou disponibilidade ainda.
+ </p>
+ {% endif %}
+ </div>
+ </div>
+ {% endif %}
+
+ <div class="card">
+ <div class="card-header">
+ <span class="card-title"> Membros ({{ members|length }})</span>
+ </div>
+ <div class="card-body">
+ {% if members %}
+ <div style="display:flex;flex-direction:column;gap:.375rem;">
+ {% for m in members %}
+ <div style="display:flex;align-items:center;gap:.625rem;padding:.5rem .625rem;background:var(--bg);border-radius:var(--radius);">
+ <span style="font-size:.9375rem;font-weight:500;">{{ m['name'] }}</span>
+ <span class="badge {% if m['role'] == 'ministry_leader' %}badge-leader{% elif m['role'] == 'recruta' %}badge-recruta{% else %}badge-volunteer{% endif %}" style="margin-left:auto;font-size:.7rem;">
+ {%- if m['role'] == 'ministry_leader' %}Líder{% elif m['role'] == 'recruta' %}Recruta{% else %}Voluntário{% endif -%}
+ </span>
+ </div>
+ {% endfor %}
+ </div>
+ {% else %}
+ <p style="color:var(--text-muted);font-size:.875rem;">Nenhum membro cadastrado.</p>
+ {% endif %}
+ </div>
+ </div>
+
+ </div>
+ </div>
+
+{% endif %}
+{% endblock %}
