@@ -1,11 +1,25 @@
 import os
 import smtplib
+import threading
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 GMAIL_USER         = os.environ.get("GMAIL_USER", "")
 GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
 FROM_NAME          = "ZELO — Escalas"
+_SMTP_TIMEOUT      = 15
+
+
+def _dispatch(msg, to_email, label=""):
+    """Envia o email em thread de background para não bloquear o worker."""
+    def _send():
+        try:
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=_SMTP_TIMEOUT) as smtp:
+                smtp.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+                smtp.sendmail(GMAIL_USER, to_email, msg.as_string())
+        except Exception as ex:
+            print(f"[email] erro ao enviar {label}: {ex}")
+    threading.Thread(target=_send, daemon=True).start()
 
 
 def send_reset_email(to_email, to_name, reset_url):
@@ -37,13 +51,7 @@ def send_reset_email(to_email, to_name, reset_url):
     msg["From"]    = f"{FROM_NAME} <{GMAIL_USER}>"
     msg["To"]      = to_email
     msg.attach(MIMEText(html, "html"))
-
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-            smtp.sendmail(GMAIL_USER, to_email, msg.as_string())
-    except Exception as ex:
-        print(f"[email] erro ao enviar: {ex}")
+    _dispatch(msg, to_email, "reset_email")
 
 
 def send_join_request_notification(leader_email, leader_name, requester_name, requester_email):
@@ -67,13 +75,7 @@ def send_join_request_notification(leader_email, leader_name, requester_name, re
     msg["From"]    = f"{FROM_NAME} <{GMAIL_USER}>"
     msg["To"]      = leader_email
     msg.attach(MIMEText(html, "html"))
-
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-            smtp.sendmail(GMAIL_USER, leader_email, msg.as_string())
-    except Exception as ex:
-        print(f"[email] erro ao notificar líder: {ex}")
+    _dispatch(msg, leader_email, "join_request")
 
 
 def send_registration_verification_email(to_email, to_name, code):
@@ -103,13 +105,7 @@ def send_registration_verification_email(to_email, to_name, code):
     msg["From"]    = f"{FROM_NAME} <{GMAIL_USER}>"
     msg["To"]      = to_email
     msg.attach(MIMEText(html, "html"))
-
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-            smtp.sendmail(GMAIL_USER, to_email, msg.as_string())
-    except Exception as ex:
-        print(f"[email] erro ao enviar verificação de cadastro: {ex}")
+    _dispatch(msg, to_email, "registration_verification")
 
 
 def send_otp_email(to_email, to_name, code):
@@ -139,10 +135,4 @@ def send_otp_email(to_email, to_name, code):
     msg["From"]    = f"{FROM_NAME} <{GMAIL_USER}>"
     msg["To"]      = to_email
     msg.attach(MIMEText(html, "html"))
-
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-            smtp.sendmail(GMAIL_USER, to_email, msg.as_string())
-    except Exception as ex:
-        print(f"[email] erro ao enviar OTP: {ex}")
+    _dispatch(msg, to_email, "otp")
