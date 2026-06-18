@@ -316,10 +316,10 @@ def logout():
 @app.route("/cadastrar", methods=["GET", "POST"])
 def first_access():
     """
-    Fluxo unificado de primeiro acesso:
-    - Usuário existente → cria join_request (já cadastrado pelo admin)
-    - Usuário novo      → cria pending_registration (nunca esteve no sistema)
-    Em ambos os casos o líder precisa aprovar antes do OTP ser enviado.
+    Fluxo de cadastro em duas etapas:
+    Etapa 1 — coleta dados e envia código de verificação por e-mail.
+    Etapa 2 — valida o código e então cria o pending_registration/join_request
+               para aprovação do líder.
     """
     if current_user.is_authenticated:
         return redirect(url_for("index"))
@@ -327,33 +327,72 @@ def first_access():
     ministries = models.list_ministries()
 
     if request.method == "POST":
-        name        = request.form.get("name", "").strip()
-        email       = request.form.get("email", "").strip().lower()
-        ministry_id = request.form.get("ministry_id", type=int)
+        step = request.form.get("step", "1")
 
-        if not email or not ministry_id:
-            flash("Preencha e-mail e ministério.", "error")
-            return render_template("first_access.html", ministries=ministries)
+        if step == "1":
+            name        = request.form.get("name", "").strip()
+            email       = request.form.get("email", "").strip().lower()
+            ministry_id = request.form.get("ministry_id", type=int)
 
-        existing_user = models.get_user_by_email(email)
+            if not email or not ministry_id:
+                flash("Preencha e-mail e ministério.", "error")
+                return render_template("first_access.html", ministries=ministries, step="1")
 
-        if existing_user:
-            # Usuário já cadastrado — pedido de acesso ao líder
-            if existing_user["ministry_id"] == ministry_id:
+            existing_user = models.get_user_by_email(email)
+            if existing_user:
+                effective_name = existing_user["name"]
+            else:
+                if not name:
+                    flash("Informe seu nome para criar uma conta.", "error")
+                    return render_template("first_access.html", ministries=ministries, step="1")
+                effective_name = name
+
+            code    = f"{secrets.randbelow(1000000):06d}"
+            expires = datetime.now(timezone.utc) + timedelta(minutes=15)
+            models.create_email_verification(effective_name, email, ministry_id, code, expires)
+            email_service.send_registration_verification_email(email, effective_name, code)
+
+            session["reg_email"]       = email
+            session["reg_ministry_id"] = ministry_id
+
+            flash("Código enviado! Verifique seu e-mail e insira o código abaixo.", "info")
+            return redirect(url_for("first_access", step="2"))
+
+        elif step == "2":
+            email = session.get("reg_email", "")
+            code  = request.form.get("code", "").strip()
+
+            if not email or not code:
+                flash("Dados inválidos. Tente novamente.", "error")
+                return redirect(url_for("first_access"))
+
+            verification = models.get_valid_email_verification(email, code)
+            if not verification:
+                flash("Código inválido ou expirado. Solicite um novo código.", "error")
+                return render_template("first_access.html", ministries=ministries, step="2",
+                                       reg_email=email)
+
+            models.mark_email_verification_used(email)
+            session.pop("reg_email", None)
+            session.pop("reg_ministry_id", None)
+
+            existing_user = models.get_user_by_email(email)
+            if existing_user:
                 models.create_join_request(existing_user["id"])
-                _notify_leader(ministry_id, existing_user["name"], email)
-        else:
-            # Usuário novo — cadastro pendente
-            if not name:
-                flash("Informe seu nome para criar uma conta.", "error")
-                return render_template("first_access.html", ministries=ministries)
-            models.create_pending_registration(name, email, ministry_id)
-            _notify_leader(ministry_id, name, email)
+                _notify_leader(verification["ministry_id"], existing_user["name"], email)
+            else:
+                models.create_pending_registration(
+                    verification["name"], email, verification["ministry_id"]
+                )
+                _notify_leader(verification["ministry_id"], verification["name"], email)
 
-        flash("Solicitação enviada! Aguarde a aprovação do líder do seu ministério.", "info")
-        return redirect(url_for("first_access"))
+            flash("Solicitação enviada! Aguarde a aprovação do líder do seu ministério.", "info")
+            return redirect(url_for("first_access"))
 
-    return render_template("first_access.html", ministries=ministries)
+    step      = request.args.get("step", "1")
+    reg_email = session.get("reg_email", "") if step == "2" else ""
+    return render_template("first_access.html", ministries=ministries, step=step,
+                           reg_email=reg_email)
 
 
 @app.route("/verificar-codigo", methods=["GET", "POST"])

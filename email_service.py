@@ -76,6 +76,42 @@ def send_join_request_notification(leader_email, leader_name, requester_name, re
         print(f"[email] erro ao notificar líder: {ex}")
 
 
+def send_registration_verification_email(to_email, to_name, code):
+    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
+        print(f"[email] credenciais não configuradas. Código de verificação de cadastro: {code}")
+        return
+
+    html = f"""
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:2rem;">
+      <h2 style="font-family:Georgia,serif;letter-spacing:.1em;text-transform:uppercase;">ZELO</h2>
+      <p>Olá, <strong>{to_name}</strong>.</p>
+      <p>Use o código abaixo para confirmar seu e-mail e concluir a solicitação de acesso:</p>
+      <div style="font-size:2.5rem;font-weight:700;letter-spacing:.4em;
+                  text-align:center;padding:1.5rem;margin:1.5rem 0;
+                  background:#f4f4f5;border-radius:12px;">
+        {code}
+      </div>
+      <p style="color:#888;font-size:.875rem;">
+        Este código expira em <strong>15 minutos</strong>.<br>
+        Se você não solicitou isso, ignore este email.
+      </p>
+    </div>
+    """
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"{code} é seu código de verificação — ZELO"
+    msg["From"]    = f"{FROM_NAME} <{GMAIL_USER}>"
+    msg["To"]      = to_email
+    msg.attach(MIMEText(html, "html"))
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            smtp.sendmail(GMAIL_USER, to_email, msg.as_string())
+    except Exception as ex:
+        print(f"[email] erro ao enviar verificação de cadastro: {ex}")
+
+
 def send_otp_email(to_email, to_name, code):
     if not GMAIL_USER or not GMAIL_APP_PASSWORD:
         print(f"[email] credenciais não configuradas. Código OTP: {code}")

@@ -278,6 +278,19 @@ def init_db():
             )
         """)
 
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS email_verifications (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                ministry_id INTEGER NOT NULL REFERENCES ministries(id) ON DELETE CASCADE,
+                code TEXT NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                used BOOLEAN NOT NULL DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+
         conn.commit()
 
     # Migração da constraint de role feita em conexão separada com autocommit

@@ -3,7 +3,7 @@
 <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Primeiro Acesso — ZELO</title>
+ <title>Cadastrar — ZELO</title>
  <meta name="theme-color" content="#1F1F24">
  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
@@ -16,10 +16,18 @@
 <div class="login-wrap">
  <div class="login-card">
   <h1 class="login-title" style="font-family:'Playfair Display',serif;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;">Zelo</h1>
-  <p class="login-subtitle">Primeiro acesso</p>
+
+  {% if step == "2" %}
+  <p class="login-subtitle">Confirme seu e-mail</p>
   <p style="font-size:.8125rem;color:var(--text-muted);text-align:center;margin-bottom:1.25rem;">
-   Preencha seus dados. O líder do ministério irá aprovar e você receberá um código por e-mail.
+   Enviamos um código de 6 dígitos para <strong>{{ reg_email }}</strong>. Insira-o abaixo para continuar.
   </p>
+  {% else %}
+  <p class="login-subtitle">Cadastrar</p>
+  <p style="font-size:.8125rem;color:var(--text-muted);text-align:center;margin-bottom:1.25rem;">
+   Preencha seus dados. Você receberá um código de verificação por e-mail.
+  </p>
+  {% endif %}
 
   {% with messages = get_flashed_messages(with_categories=true) %}
   {% for category, message in messages %}
@@ -30,7 +38,33 @@
   {% endfor %}
   {% endwith %}
 
+  {% if step == "2" %}
   <form method="POST">
+   <input type="hidden" name="step" value="2">
+
+   <div class="form-group">
+    <label for="code">Código de verificação</label>
+    <input type="text" id="code" name="code"
+     placeholder="000000"
+     inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+     autocomplete="one-time-code"
+     style="font-size:1.5rem;letter-spacing:.35em;text-align:center;"
+     autofocus required>
+   </div>
+
+   <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem;">
+    Confirmar código
+   </button>
+  </form>
+
+  <p style="text-align:center;margin-top:1rem;font-size:.875rem;">
+   <a href="{{ url_for('first_access') }}" style="color:var(--text-muted);">Não recebi o código — tentar novamente</a>
+  </p>
+
+  {% else %}
+  <form method="POST">
+   <input type="hidden" name="step" value="1">
+
    <div class="form-group">
     <label for="name">Nome completo <span style="color:var(--text-muted);font-size:.75rem;">(apenas para novos cadastros)</span></label>
     <input type="text" id="name" name="name" placeholder="Seu nome"
@@ -56,12 +90,13 @@
    </div>
 
    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem;">
-    Solicitar acesso
+    Enviar código de verificação
    </button>
   </form>
+  {% endif %}
 
   <p style="text-align:center;margin-top:1rem;font-size:.875rem;">
-   <a href="{{ url_for('verify_otp') }}" style="color:var(--text-muted);">Já recebi meu código</a>
+   <a href="{{ url_for('verify_otp') }}" style="color:var(--text-muted);">Já recebi meu código de acesso</a>
   </p>
   <p style="text-align:center;margin-top:.5rem;font-size:.875rem;">
    <a href="{{ url_for('login') }}" style="color:var(--text-muted);">Já tenho senha — fazer login</a>

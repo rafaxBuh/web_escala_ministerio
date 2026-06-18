@@ -462,6 +462,40 @@ def mark_token_used(token):
         conn.commit()
 
 
+# ── Email Verification (pré-cadastro) ─────────────────────────────────────────
+
+def create_email_verification(name, email, ministry_id, code, expires_at):
+    with db_conn() as conn:
+        conn.execute(
+            "UPDATE email_verifications SET used = TRUE WHERE email = %s AND used = FALSE",
+            (email,),
+        )
+        conn.execute(
+            "INSERT INTO email_verifications (name, email, ministry_id, code, expires_at) VALUES (%s,%s,%s,%s,%s)",
+            (name, email, ministry_id, code, expires_at),
+        )
+        conn.commit()
+
+
+def get_valid_email_verification(email, code):
+    with db_conn() as conn:
+        row = conn.execute("""
+            SELECT * FROM email_verifications
+            WHERE email = %s AND code = %s AND used = FALSE AND expires_at > NOW()
+            ORDER BY created_at DESC LIMIT 1
+        """, (email, code)).fetchone()
+        return dict(row) if row else None
+
+
+def mark_email_verification_used(email):
+    with db_conn() as conn:
+        conn.execute(
+            "UPDATE email_verifications SET used = TRUE WHERE email = %s AND used = FALSE",
+            (email,),
+        )
+        conn.commit()
+
+
 # ── Email OTP ──────────────────────────────────────────────────────────────────
 
 def create_otp(user_id, code, expires_at):
