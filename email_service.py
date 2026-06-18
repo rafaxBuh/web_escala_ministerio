@@ -1,32 +1,34 @@
 import os
-import smtplib
 import threading
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
-GMAIL_USER         = os.environ.get("GMAIL_USER", "")
-GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
-FROM_NAME          = "ZELO — Escalas"
-_SMTP_TIMEOUT      = 15
+import requests
+
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+RESEND_FROM    = os.environ.get("RESEND_FROM", "ZELO <onboarding@resend.dev>")
+RESEND_URL     = "https://api.resend.com/emails"
 
 
-def _dispatch(msg, to_email, label=""):
-    """Envia o email em thread de background para não bloquear o worker."""
+def _dispatch(to_email, subject, html, label=""):
+    """Envia o email via Resend em thread de background para não bloquear o worker."""
     def _send():
+        if not RESEND_API_KEY:
+            print(f"[email] RESEND_API_KEY não configurada. Assunto: {subject}")
+            return
         try:
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=_SMTP_TIMEOUT) as smtp:
-                smtp.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-                smtp.sendmail(GMAIL_USER, to_email, msg.as_string())
+            resp = requests.post(
+                RESEND_URL,
+                headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+                json={"from": RESEND_FROM, "to": [to_email], "subject": subject, "html": html},
+                timeout=15,
+            )
+            if not resp.ok:
+                print(f"[email] erro ao enviar {label}: {resp.status_code} {resp.text}")
         except Exception as ex:
             print(f"[email] erro ao enviar {label}: {ex}")
     threading.Thread(target=_send, daemon=True).start()
 
 
 def send_reset_email(to_email, to_name, reset_url):
-    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
-        print(f"[email] GMAIL_USER ou GMAIL_APP_PASSWORD não configurados. Link: {reset_url}")
-        return
-
     html = f"""
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:2rem;">
       <h2 style="font-family:Georgia,serif;letter-spacing:.1em;text-transform:uppercase;">ZELO</h2>
@@ -45,20 +47,10 @@ def send_reset_email(to_email, to_name, reset_url):
       </p>
     </div>
     """
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Redefinição de senha — ZELO"
-    msg["From"]    = f"{FROM_NAME} <{GMAIL_USER}>"
-    msg["To"]      = to_email
-    msg.attach(MIMEText(html, "html"))
-    _dispatch(msg, to_email, "reset_email")
+    _dispatch(to_email, "Redefinição de senha — ZELO", html, "reset_email")
 
 
 def send_join_request_notification(leader_email, leader_name, requester_name, requester_email):
-    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
-        print(f"[email] credenciais não configuradas. Solicitação de {requester_name} ({requester_email})")
-        return
-
     html = f"""
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:2rem;">
       <h2 style="font-family:Georgia,serif;letter-spacing:.1em;text-transform:uppercase;">ZELO</h2>
@@ -69,20 +61,10 @@ def send_join_request_notification(leader_email, leader_name, requester_name, re
       </p>
     </div>
     """
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"Nova solicitação de acesso — {requester_name}"
-    msg["From"]    = f"{FROM_NAME} <{GMAIL_USER}>"
-    msg["To"]      = leader_email
-    msg.attach(MIMEText(html, "html"))
-    _dispatch(msg, leader_email, "join_request")
+    _dispatch(leader_email, f"Nova solicitação de acesso — {requester_name}", html, "join_request")
 
 
 def send_registration_verification_email(to_email, to_name, code):
-    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
-        print(f"[email] credenciais não configuradas. Código de verificação de cadastro: {code}")
-        return
-
     html = f"""
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:2rem;">
       <h2 style="font-family:Georgia,serif;letter-spacing:.1em;text-transform:uppercase;">ZELO</h2>
@@ -99,20 +81,10 @@ def send_registration_verification_email(to_email, to_name, code):
       </p>
     </div>
     """
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"{code} é seu código de verificação — ZELO"
-    msg["From"]    = f"{FROM_NAME} <{GMAIL_USER}>"
-    msg["To"]      = to_email
-    msg.attach(MIMEText(html, "html"))
-    _dispatch(msg, to_email, "registration_verification")
+    _dispatch(to_email, f"{code} é seu código de verificação — ZELO", html, "registration_verification")
 
 
 def send_otp_email(to_email, to_name, code):
-    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
-        print(f"[email] credenciais não configuradas. Código OTP: {code}")
-        return
-
     html = f"""
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:2rem;">
       <h2 style="font-family:Georgia,serif;letter-spacing:.1em;text-transform:uppercase;">ZELO</h2>
@@ -129,10 +101,4 @@ def send_otp_email(to_email, to_name, code):
       </p>
     </div>
     """
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"{code} é seu código de acesso — ZELO"
-    msg["From"]    = f"{FROM_NAME} <{GMAIL_USER}>"
-    msg["To"]      = to_email
-    msg.attach(MIMEText(html, "html"))
-    _dispatch(msg, to_email, "otp")
+    _dispatch(to_email, f"{code} é seu código de acesso — ZELO", html, "otp")
