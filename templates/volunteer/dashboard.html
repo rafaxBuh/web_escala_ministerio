@@ -41,7 +41,7 @@
  <form method="POST" action="{{ url_for('save_availability') }}">
  <input type="hidden" name="period_id" value="{{ open_period['id'] }}">
 
- {% set week_dates = get_week_dates(open_period['year'], open_period['month'], open_period['end_year'], open_period['end_month']) %}
+ {% set week_dates = get_week_dates(open_period['year'], open_period['month'], open_period['end_year'], open_period['end_month'], skip_past=True) %}
  <div class="checkbox-grid">
  {% for wk in week_dates %}
  <label class="checkbox-card {% if availability.get(wk.week) %}checked{% endif %}">
