@@ -76,7 +76,10 @@ def list_users_by_ministry(ministry_id):
 def list_volunteers_by_ministry(ministry_id):
     with db_conn() as conn:
         return conn.execute(
-            "SELECT * FROM users WHERE ministry_id = %s AND role IN ('volunteer', 'recruta', 'ministry_leader') ORDER BY name",
+            """SELECT * FROM users
+               WHERE (ministry_id = %s AND role IN ('volunteer', 'recruta', 'ministry_leader'))
+                  OR role = 'general_leader'
+               ORDER BY name""",
             (ministry_id,),
         ).fetchall()
 
@@ -224,8 +227,8 @@ def get_availability_for_period_week(period_id, week):
                 ON a.user_id = u.id
                AND a.period_id = %s
                AND a.week = %s
-            WHERE u.ministry_id = p.ministry_id
-              AND u.role IN ('volunteer', 'recruta', 'ministry_leader')
+            WHERE (u.ministry_id = p.ministry_id AND u.role IN ('volunteer', 'recruta', 'ministry_leader'))
+               OR u.role = 'general_leader'
             ORDER BY u.name
         """, (period_id, period_id, week)).fetchall()
 

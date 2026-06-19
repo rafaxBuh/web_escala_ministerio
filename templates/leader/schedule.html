@@ -37,6 +37,29 @@
  (current_user.role == 'ministry_leader' and period['ministry_id'] == current_user.ministry_id
  or current_user.role == 'general_leader') %}
 
+{# ── Admin availability form (period open) ─────────────────────────────────── #}
+{% if current_user.role == 'general_leader' and period['status'] == 'open' %}
+<div class="card" style="margin-bottom:1.25rem;">
+ <div class="card-header">
+  <span class="card-title">Minha disponibilidade</span>
+  <span style="font-size:.8125rem;color:var(--text-muted);">Marque as semanas em que você pode servir</span>
+ </div>
+ <form method="POST" action="{{ url_for('save_availability') }}" style="padding:1rem 1.25rem;">
+  <input type="hidden" name="period_id" value="{{ period['id'] }}">
+  <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem;">
+   {% for wk in week_dates %}
+   <label style="display:flex;align-items:center;gap:.625rem;cursor:pointer;">
+    <input type="checkbox" name="week_{{ wk.week }}"
+     {% if admin_availability.get(wk.week) %}checked{% endif %}>
+    <span>{{ wk.label }}</span>
+   </label>
+   {% endfor %}
+  </div>
+  <button type="submit" class="btn btn-primary btn-sm">Salvar disponibilidade</button>
+ </form>
+</div>
+{% endif %}
+
 {# ── Editable schedule (status = closed) ───────────────────────────────────── #}
 {% if can_edit and schedule %}
 
