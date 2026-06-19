@@ -3,22 +3,28 @@ import threading
 
 import requests
 
-RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
-RESEND_FROM    = os.environ.get("RESEND_FROM", "ZELO <onboarding@resend.dev>")
-RESEND_URL     = "https://api.resend.com/emails"
+BREVO_API_KEY   = os.environ.get("BREVO_API_KEY", "")
+BREVO_FROM_EMAIL = os.environ.get("BREVO_FROM_EMAIL", "")
+BREVO_FROM_NAME  = os.environ.get("BREVO_FROM_NAME", "ZELO")
+BREVO_URL        = "https://api.brevo.com/v3/smtp/email"
 
 
 def _dispatch(to_email, subject, html, label=""):
-    """Envia o email via Resend em thread de background para não bloquear o worker."""
+    """Envia o email via Brevo em thread de background para não bloquear o worker."""
     def _send():
-        if not RESEND_API_KEY:
-            print(f"[email] RESEND_API_KEY não configurada. Assunto: {subject}")
+        if not BREVO_API_KEY or not BREVO_FROM_EMAIL:
+            print(f"[email] BREVO_API_KEY ou BREVO_FROM_EMAIL não configurados. Assunto: {subject}")
             return
         try:
             resp = requests.post(
-                RESEND_URL,
-                headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
-                json={"from": RESEND_FROM, "to": [to_email], "subject": subject, "html": html},
+                BREVO_URL,
+                headers={"api-key": BREVO_API_KEY, "Content-Type": "application/json"},
+                json={
+                    "sender":      {"name": BREVO_FROM_NAME, "email": BREVO_FROM_EMAIL},
+                    "to":          [{"email": to_email}],
+                    "subject":     subject,
+                    "htmlContent": html,
+                },
                 timeout=15,
             )
             if not resp.ok:
