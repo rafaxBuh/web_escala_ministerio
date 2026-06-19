@@ -109,6 +109,9 @@
         <span class="slider-toggle"></span>
       </label>
     </div>
+    <button id="nav-install-btn" onclick="triggerInstall()" style="display:none;width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:.85rem 1.25rem;font-size:.9375rem;color:var(--text);border-bottom:1px solid var(--border);">
+      Instalar app
+    </button>
     <div class="nav-mobile-footer">
       <div>
         <span class="user-name">{{ current_user.name }}</span>
@@ -247,6 +250,78 @@ document.addEventListener('DOMContentLoaded', () => {
   const mobSwitch = document.getElementById('theme-switch-mobile');
   if (deskSwitch) deskSwitch.checked = isDark;
   if (mobSwitch) mobSwitch.checked = isDark;
+});
+
+// ── PWA Install ───────────────────────────────────────────────────────────────
+var _installPrompt = null;
+
+function _showInstallBanner(isIOS) {
+  if (document.getElementById('pwa-install-banner')) return;
+  var banner = document.createElement('div');
+  banner.id = 'pwa-install-banner';
+  banner.style.cssText = 'position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:.75rem;background:#1F1F24;color:#fff;padding:.75rem 1.1rem;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.35);font-size:.9rem;font-family:inherit;max-width:calc(100vw - 2rem);width:max-content;';
+  if (isIOS) {
+    banner.innerHTML =
+      '<span style="flex:1;">Instale: toque em <strong>Compartilhar</strong> → <strong>Adicionar à Tela de Início</strong></span>' +
+      '<button onclick="_dismissInstall()" style="background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer;padding:0 .25rem;line-height:1;">&times;</button>';
+  } else {
+    banner.innerHTML =
+      '<span style="flex:1;">Adicione o ZELO à tela inicial</span>' +
+      '<button onclick="_triggerInstall()" style="background:#fff;color:#1F1F24;border:none;border-radius:6px;padding:.35rem .85rem;font-weight:700;cursor:pointer;font-size:.875rem;">Instalar</button>' +
+      '<button onclick="_dismissInstall()" style="background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer;padding:0 .25rem;line-height:1;">&times;</button>';
+  }
+  document.body.appendChild(banner);
+}
+
+function _dismissInstall() {
+  var b = document.getElementById('pwa-install-banner');
+  if (b) b.remove();
+  localStorage.setItem('pwa-dismissed', '1');
+}
+
+function _triggerInstall() {
+  if (!_installPrompt) return;
+  _installPrompt.prompt();
+  _installPrompt.userChoice.then(function(r) {
+    if (r.outcome === 'accepted') _dismissInstall();
+    _installPrompt = null;
+    var btn = document.getElementById('nav-install-btn');
+    if (btn) btn.style.display = 'none';
+  });
+}
+
+function triggerInstall() {
+  if (_installPrompt) {
+    _triggerInstall();
+  } else {
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIOS) _showInstallBanner(true);
+  }
+}
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _installPrompt = e;
+  var btn = document.getElementById('nav-install-btn');
+  if (btn) btn.style.display = 'block';
+  if (!localStorage.getItem('pwa-dismissed')) _showInstallBanner(false);
+});
+
+window.addEventListener('appinstalled', function() {
+  _dismissInstall();
+  _installPrompt = null;
+  var btn = document.getElementById('nav-install-btn');
+  if (btn) btn.style.display = 'none';
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isIOS && !isStandalone && !localStorage.getItem('pwa-dismissed')) {
+    _showInstallBanner(true);
+    var btn = document.getElementById('nav-install-btn');
+    if (btn) btn.style.display = 'block';
+  }
 });
 
 function toggleMenu() {
