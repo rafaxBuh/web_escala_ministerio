@@ -28,10 +28,11 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-only-insecure-key")
 def inject_vapid():
     return {"vapid_public_key": os.environ.get("VAPID_PUBLIC_KEY", "").strip()}
 
-def get_week_dates(year, month, end_year=None, end_month=None):
+def get_week_dates(year, month, end_year=None, end_month=None, skip_past=False):
     """
     Retorna lista de dicts para cada semana segunda→domingo do período.
     Suporta períodos multi-mês: passa end_year/end_month para expandir.
+    Se skip_past=True, omite semanas cujo domingo já passou (antes de hoje).
     """
     end_year = end_year or year
     end_month = end_month or month
@@ -46,12 +47,14 @@ def get_week_dates(year, month, end_year=None, end_month=None):
     else:
         last_day = date(end_year, end_month + 1, 1) - timedelta(days=1)
 
+    today = date.today()
     weeks = []
     current = first_monday
     while current <= last_day:
         end_sun = current + timedelta(days=6)
-        label = f"{current.day:02d}/{current.month:02d} – {end_sun.day:02d}/{end_sun.month:02d}"
-        weeks.append({"week": len(weeks) + 1, "start": current, "end": end_sun, "label": label})
+        if not skip_past or end_sun >= today:
+            label = f"{current.day:02d}/{current.month:02d} – {end_sun.day:02d}/{end_sun.month:02d}"
+            weeks.append({"week": len(weeks) + 1, "start": current, "end": end_sun, "label": label})
         current += timedelta(weeks=1)
     return weeks
 
@@ -549,7 +552,7 @@ def volunteer_dashboard():
 @app.route("/voluntario/disponibilidade", methods=["POST"])
 @login_required
 def save_availability():
-    if current_user.role not in ("volunteer", "recruta", "ministry_leader", "general_leader"):
+    if current_user.role not in ("volunteer", "recruta", "ministry_leader"):
         abort(403)
 
     period_id = request.form.get("period_id", type=int)
@@ -561,7 +564,7 @@ def save_availability():
         flash("Este período não está aberto.", "error")
         return redirect(url_for("volunteer_dashboard"))
 
-    if current_user.role != "general_leader" and period["ministry_id"] != current_user.ministry_id:
+    if period["ministry_id"] != current_user.ministry_id:
         abort(403)
 
     weeks = get_week_dates(
@@ -573,8 +576,6 @@ def save_availability():
         models.set_availability(current_user.id, period_id, wk["week"], available)
 
     flash("Disponibilidade salva com sucesso!", "success")
-    if current_user.role == "general_leader":
-        return redirect(url_for("view_schedule", period_id=period_id))
     if current_user.role == "ministry_leader":
         return redirect(url_for("leader_dashboard"))
     return redirect(url_for("volunteer_dashboard"))
@@ -761,17 +762,12 @@ def view_schedule(period_id):
     ministry = models.get_ministry(period["ministry_id"])
     volunteers = models.list_volunteers_by_ministry(period["ministry_id"])
 
-    admin_availability = {}
-    if current_user.role == "general_leader" and period["status"] == "open":
-        admin_availability = models.get_user_availability(current_user.id, period_id)
-
     return render_template(
         "leader/schedule.html",
         period=period,
         schedule=schedule,
         ministry=ministry,
         volunteers=volunteers,
-        admin_availability=admin_availability,
     )
 
 
@@ -779,9 +775,7 @@ def view_schedule(period_id):
 @leader_required
 def save_schedule_edits(period_id):
     period = models.get_period(period_id)
-    if not period:
-        abort(404)
-    if current_user.role != "general_leader" and period["ministry_id"] != current_user.ministry_id:
+    if not period or period["ministry_id"] != current_user.ministry_id:
         abort(403)
     if period["status"] == "open":
         flash("A escala não pode ser editada enquanto o período está aberto.", "error")
