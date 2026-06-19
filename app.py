@@ -28,10 +28,11 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-only-insecure-key")
 def inject_vapid():
     return {"vapid_public_key": os.environ.get("VAPID_PUBLIC_KEY", "").strip()}
 
-def get_week_dates(year, month, end_year=None, end_month=None):
+def get_week_dates(year, month, end_year=None, end_month=None, skip_past=False):
     """
     Retorna lista de dicts para cada semana segunda→domingo do período.
     Suporta períodos multi-mês: passa end_year/end_month para expandir.
+    Se skip_past=True, omite semanas cujo domingo já passou (antes de hoje).
     """
     end_year = end_year or year
     end_month = end_month or month
@@ -40,18 +41,19 @@ def get_week_dates(year, month, end_year=None, end_month=None):
     days_until_monday = (7 - first_day.weekday()) % 7
     first_monday = first_day + timedelta(days=days_until_monday)
 
-    # último dia do mês final
     if end_month == 12:
         last_day = date(end_year + 1, 1, 1) - timedelta(days=1)
     else:
         last_day = date(end_year, end_month + 1, 1) - timedelta(days=1)
 
+    today = date.today()
     weeks = []
     current = first_monday
     while current <= last_day:
         end_sun = current + timedelta(days=6)
-        label = f"{current.day:02d}/{current.month:02d} – {end_sun.day:02d}/{end_sun.month:02d}"
-        weeks.append({"week": len(weeks) + 1, "start": current, "end": end_sun, "label": label})
+        if not skip_past or end_sun >= today:
+            label = f"{current.day:02d}/{current.month:02d} – {end_sun.day:02d}/{end_sun.month:02d}"
+            weeks.append({"week": len(weeks) + 1, "start": current, "end": end_sun, "label": label})
         current += timedelta(weeks=1)
     return weeks
 
