@@ -28,11 +28,10 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-only-insecure-key")
 def inject_vapid():
     return {"vapid_public_key": os.environ.get("VAPID_PUBLIC_KEY", "").strip()}
 
-def get_week_dates(year, month, end_year=None, end_month=None, skip_past=False):
+def get_week_dates(year, month, end_year=None, end_month=None):
     """
     Retorna lista de dicts para cada semana segunda→domingo do período.
     Suporta períodos multi-mês: passa end_year/end_month para expandir.
-    Se skip_past=True, omite semanas cujo domingo já passou (antes de hoje).
     """
     end_year = end_year or year
     end_month = end_month or month
@@ -47,14 +46,12 @@ def get_week_dates(year, month, end_year=None, end_month=None, skip_past=False):
     else:
         last_day = date(end_year, end_month + 1, 1) - timedelta(days=1)
 
-    today = date.today()
     weeks = []
     current = first_monday
     while current <= last_day:
         end_sun = current + timedelta(days=6)
-        if not skip_past or end_sun >= today:
-            label = f"{current.day:02d}/{current.month:02d} – {end_sun.day:02d}/{end_sun.month:02d}"
-            weeks.append({"week": len(weeks) + 1, "start": current, "end": end_sun, "label": label})
+        label = f"{current.day:02d}/{current.month:02d} – {end_sun.day:02d}/{end_sun.month:02d}"
+        weeks.append({"week": len(weeks) + 1, "start": current, "end": end_sun, "label": label})
         current += timedelta(weeks=1)
     return weeks
 
@@ -826,6 +823,17 @@ def confirm_period(period_id):
         "/voluntario",
     )
     return redirect(url_for("view_schedule", period_id=period_id))
+
+
+@app.route("/lider/periodo/<int:period_id>/deletar", methods=["POST"])
+@leader_required
+def delete_period(period_id):
+    period = models.get_period(period_id)
+    if not period or period["ministry_id"] != current_user.ministry_id:
+        abort(403)
+    models.delete_period(period_id)
+    flash("Escala removida com sucesso.", "success")
+    return redirect(url_for("leader_dashboard"))
 
 
 @app.route("/lider/periodo/<int:period_id>/reabrir", methods=["POST"])
